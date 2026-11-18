@@ -1,0 +1,4402 @@
+{
+"afterburner.11": {
+"id": 162781112,
+"needed": 1
+},
+"afterburner.14": {
+"id": 162781115,
+"needed": 2
+},
+"afterburner.17": {
+"id": 162781118,
+"needed": 2
+},
+"afterburner.19": {
+"id": 162781120,
+"needed": 3
+},
+"afterburner.2": {
+"id": -1103127654,
+"needed": 1
+},
+"afterburner.22": {
+"id": 162781144,
+"needed": 3
+},
+"afterburner.24": {
+"id": 162781146,
+"needed": 4
+},
+"afterburner.27": {
+"id": 162781149,
+"needed": 4
+},
+"afterburner.29": {
+"id": 162781151,
+"needed": 5
+},
+"afterburner.32": {
+"id": 162781175,
+"needed": 5
+},
+"afterburner.34": {
+"id": 162781177,
+"needed": 6
+},
+"afterburner.37": {
+"id": 162781180,
+"needed": 6
+},
+"afterburner.39": {
+"id": 162781182,
+"needed": 7
+},
+"afterburner.4": {
+"id": -1103127652,
+"needed": 1
+},
+"afterburner.42": {
+"id": 162781206,
+"needed": 7
+},
+"afterburner.44": {
+"id": 162781208,
+"needed": 8
+},
+"afterburner.47": {
+"id": 162781211,
+"needed": 9
+},
+"afterburner.49": {
+"id": 162781213,
+"needed": 9
+},
+"afterburner.52": {
+"id": 162781237,
+"needed": 10
+},
+"afterburner.54": {
+"id": 162781239,
+"needed": 10
+},
+"afterburner.57": {
+"id": 162781242,
+"needed": 11
+},
+"afterburner.59": {
+"id": 162781244,
+"needed": 11
+},
+"afterburner.62": {
+"id": 162781268,
+"needed": 12
+},
+"afterburner.64": {
+"id": 162781270,
+"needed": 12
+},
+"afterburner.67": {
+"id": 162781273,
+"needed": 13
+},
+"afterburner.69": {
+"id": 162781275,
+"needed": 13
+},
+"afterburner.7": {
+"id": -1103127649,
+"needed": 1
+},
+"afterburner.74": {
+"id": 162781301,
+"needed": 14
+},
+"afterburner.84": {
+"id": 162781332,
+"needed": 14
+},
+"afterburner.86": {
+"id": 162781334,
+"needed": 13
+},
+"afterburner.88": {
+"id": 162781336,
+"needed": 13
+},
+"afterburner.9": {
+"id": -1103127647,
+"needed": 1
+},
+"afterburner.90": {
+"id": 162781359,
+"needed": 13
+},
+"afterburner.conquest": {
+"id": 273662095,
+"needed": null
+},
+"afterburner.conquest.fast": {
+"id": 1712506189,
+"needed": null
+},
+"afterburner.conquest.slow": {
+"id": 521699246,
+"needed": null
+},
+"afterburner.rare.antares": {
+"id": -182155792,
+"needed": 8
+},
+"afterburner.rare.draconis": {
+"id": 1234394141,
+"needed": 19
+},
+"afterburner.rare.gemini": {
+"id": -756003103,
+"needed": 10
+},
+"afterburner.rare.mizar": {
+"id": -1426374969,
+"needed": 13
+},
+"afterburner.rare.sol": {
+"id": 1880269350,
+"needed": 17
+},
+"afterburner.rare.vega": {
+"id": 1175313101,
+"needed": 6
+},
+"afterburner.sirius.draconis": {
+"id": 1575975449,
+"needed": 14
+},
+"afterburner.sirius.long.antares": {
+"id": -1790165278,
+"needed": 14
+},
+"afterburner.sirius.long.draconis": {
+"id": -2026533867,
+"needed": 14
+},
+"afterburner.sirius.long.gemini": {
+"id": 1663743185,
+"needed": 14
+},
+"afterburner.sirius.long.mizar": {
+"id": -653052373,
+"needed": 14
+},
+"afterburner.sirius.long.sirius": {
+"id": 1702155399,
+"needed": 14
+},
+"afterburner.sirius.long.sol": {
+"id": 486939116,
+"needed": 14
+},
+"afterburner.sirius.long.vega": {
+"id": -1402984603,
+"needed": 14
+},
+"afterburner.sirius.mizar": {
+"id": -1775132881,
+"needed": 14
+},
+"afterburner.sirius.sirius": {
+"id": 1828244363,
+"needed": 14
+},
+"afterburner.sirius.sol": {
+"id": 1390840688,
+"needed": 14
+},
+"afterburner.sirius.strong.antares": {
+"id": 2138205565,
+"needed": 14
+},
+"afterburner.sirius.strong.draconis": {
+"id": -1673709072,
+"needed": 14
+},
+"afterburner.sirius.strong.gemini": {
+"id": 1334518700,
+"needed": 14
+},
+"afterburner.sirius.strong.mizar": {
+"id": -312953210,
+"needed": 14
+},
+"afterburner.sirius.strong.sirius": {
+"id": -406049310,
+"needed": 14
+},
+"afterburner.sirius.strong.tauceti": {
+"id": 396462454,
+"needed": 6
+},
+"afterburner.sirius.strong.vega": {
+"id": 556679488,
+"needed": 14
+},
+"aggrobeacon.17": {
+"id": -1061601688,
+"needed": 2
+},
+"aggrobeacon.19": {
+"id": -1061601686,
+"needed": 2
+},
+"aggrobeacon.22": {
+"id": -1061601662,
+"needed": 3
+},
+"aggrobeacon.24": {
+"id": -1061601660,
+"needed": 3
+},
+"aggrobeacon.27": {
+"id": -1061601657,
+"needed": 3
+},
+"aggrobeacon.29": {
+"id": -1061601655,
+"needed": 4
+},
+"aggrobeacon.32": {
+"id": -1061601631,
+"needed": 4
+},
+"aggrobeacon.34": {
+"id": -1061601629,
+"needed": 5
+},
+"aggrobeacon.37": {
+"id": -1061601626,
+"needed": 5
+},
+"aggrobeacon.39": {
+"id": -1061601624,
+"needed": 6
+},
+"aggrobeacon.42": {
+"id": -1061601600,
+"needed": 6
+},
+"aggrobeacon.44": {
+"id": -1061601598,
+"needed": 6
+},
+"aggrobeacon.47": {
+"id": -1061601595,
+"needed": 7
+},
+"aggrobeacon.49": {
+"id": -1061601593,
+"needed": 7
+},
+"aggrobeacon.52": {
+"id": -1061601569,
+"needed": 8
+},
+"aggrobeacon.54": {
+"id": -1061601567,
+"needed": 8
+},
+"aggrobeacon.57": {
+"id": -1061601564,
+"needed": 9
+},
+"aggrobeacon.59": {
+"id": -1061601562,
+"needed": 9
+},
+"aggrobeacon.62": {
+"id": -1061601538,
+"needed": 9
+},
+"aggrobeacon.64": {
+"id": -1061601536,
+"needed": 10
+},
+"aggrobeacon.67": {
+"id": -1061601533,
+"needed": 10
+},
+"aggrobeacon.69": {
+"id": -1061601531,
+"needed": 11
+},
+"aggrobeacon.74": {
+"id": -1061601505,
+"needed": 21
+},
+"aggrobeacon.84": {
+"id": -1061601474,
+"needed": 12
+},
+"aggrobeacon.86": {
+"id": -1061601472,
+"needed": 12
+},
+"aggrobeacon.88": {
+"id": -1061601470,
+"needed": 13
+},
+"aggrobeacon.90": {
+"id": -1061601447,
+"needed": 13
+},
+"aggrobeacon.rare.antares": {
+"id": 147296026,
+"needed": 7
+},
+"aggrobeacon.rare.draconis": {
+"id": 1563845959,
+"needed": 16
+},
+"aggrobeacon.rare.gemini": {
+"id": -426551285,
+"needed": 9
+},
+"aggrobeacon.rare.mizar": {
+"id": -1096923151,
+"needed": 11
+},
+"aggrobeacon.rare.sol": {
+"id": -2085246128,
+"needed": 14
+},
+"aggrobeacon.sirius.mizar": {
+"id": -1445681063,
+"needed": 12
+},
+"aggrobeacon.sirius.rapid.gemini": {
+"id": 1610628701,
+"needed": 12
+},
+"aggrobeacon.sirius.rapid.mizar": {
+"id": -1490556861,
+"needed": 12
+},
+"aggrobeacon.sirius.rapid.tauceti": {
+"id": -1744767149,
+"needed": 6
+},
+"aggrobeacon.sirius.sirius": {
+"id": -2137271115,
+"needed": 12
+},
+"aggrobeacon.sirius.strong.antares": {
+"id": -760189145,
+"needed": 12
+},
+"aggrobeacon.sirius.strong.draconis": {
+"id": -277136486,
+"needed": 12
+},
+"aggrobeacon.sirius.strong.gemini": {
+"id": -1563876010,
+"needed": 12
+},
+"aggrobeacon.sirius.strong.mizar": {
+"id": 1083619376,
+"needed": 12
+},
+"aggrobeacon.sirius.strong.tauceti": {
+"id": 1793035040,
+"needed": 6
+},
+"aim.11": {
+"id": -590835328,
+"needed": 1
+},
+"aim.14": {
+"id": -590835325,
+"needed": 1
+},
+"aim.17": {
+"id": -590835322,
+"needed": 2
+},
+"aim.19": {
+"id": -590835320,
+"needed": 2
+},
+"aim.22": {
+"id": -590835296,
+"needed": 3
+},
+"aim.24": {
+"id": -590835294,
+"needed": 3
+},
+"aim.27": {
+"id": -590835291,
+"needed": 3
+},
+"aim.29": {
+"id": -590835289,
+"needed": 4
+},
+"aim.32": {
+"id": -590835265,
+"needed": 4
+},
+"aim.34": {
+"id": -590835263,
+"needed": 5
+},
+"aim.37": {
+"id": -590835260,
+"needed": 5
+},
+"aim.39": {
+"id": -590835258,
+"needed": 6
+},
+"aim.42": {
+"id": -590835234,
+"needed": 6
+},
+"aim.44": {
+"id": -590835232,
+"needed": 6
+},
+"aim.47": {
+"id": -590835229,
+"needed": 7
+},
+"aim.49": {
+"id": -590835227,
+"needed": 7
+},
+"aim.52": {
+"id": -590835203,
+"needed": 8
+},
+"aim.54": {
+"id": -590835201,
+"needed": 8
+},
+"aim.57": {
+"id": -590835198,
+"needed": 9
+},
+"aim.59": {
+"id": -590835196,
+"needed": 9
+},
+"aim.62": {
+"id": -590835172,
+"needed": 9
+},
+"aim.64": {
+"id": -590835170,
+"needed": 10
+},
+"aim.67": {
+"id": -590835167,
+"needed": 10
+},
+"aim.69": {
+"id": -590835165,
+"needed": 11
+},
+"aim.74": {
+"id": -590835139,
+"needed": 14
+},
+"aim.84": {
+"id": -590835108,
+"needed": 15
+},
+"aim.86": {
+"id": -590835106,
+"needed": 14
+},
+"aim.88": {
+"id": -590835104,
+"needed": 13
+},
+"aim.9": {
+"id": -1404532519,
+"needed": 1
+},
+"aim.90": {
+"id": -590835081,
+"needed": 13
+},
+"aim.sirius.antares": {
+"id": 1120544558,
+"needed": 2
+},
+"aim.sirius.gemini": {
+"id": -394859363,
+"needed": 2
+},
+"aim.sirius.sirius": {
+"id": -536783021,
+"needed": 2
+},
+"aim.sirius.sol": {
+"id": -974186696,
+"needed": 2
+},
+"aim.sirius.strong.antares": {
+"id": -494599355,
+"needed": 2
+},
+"aim.sirius.strong.mizar": {
+"id": 1349209166,
+"needed": 2
+},
+"aim.sirius.strong.sirius": {
+"id": 1256113066,
+"needed": 2
+},
+"aim.sirius.strong.tauceti": {
+"id": 2058624830,
+"needed": 6
+},
+"aim.sirius.strong.vega": {
+"id": -2076125432,
+"needed": 2
+},
+"aim.sirius.vega": {
+"id": 64276785,
+"needed": 2
+},
+"aimcomputer.rare.antares": {
+"id": 1747784120,
+"needed": 7
+},
+"aimcomputer.rare.draconis": {
+"id": -1130633243,
+"needed": 16
+},
+"aimcomputer.rare.gemini": {
+"id": 1173936809,
+"needed": 9
+},
+"aimcomputer.rare.mizar": {
+"id": 503564943,
+"needed": 11
+},
+"aimcomputer.rare.sol": {
+"id": -484758034,
+"needed": 14
+},
+"aimcomputer.rare.vega": {
+"id": -1189714283,
+"needed": 5
+},
+"attackbuff.62": {
+"id": 928032407,
+"needed": 9
+},
+"attackbuff.64": {
+"id": 928032409,
+"needed": 10
+},
+"attackbuff.67": {
+"id": 928032412,
+"needed": 10
+},
+"attackbuff.69": {
+"id": 928032414,
+"needed": 11
+},
+"attackbuff.73": {
+"id": 928032439,
+"needed": 22
+},
+"attackbuff.74": {
+"id": 928032440,
+"needed": 21
+},
+"attackbuff.84": {
+"id": 928032471,
+"needed": 16
+},
+"attackbuff.86": {
+"id": 928032473,
+"needed": 14
+},
+"attackbuff.88": {
+"id": 928032475,
+"needed": 13
+},
+"attackbuff.90": {
+"id": 928032498,
+"needed": 13
+},
+"attackbuff.conquest": {
+"id": 2044458692,
+"needed": null
+},
+"attackbuff.rare.draconis": {
+"id": -418401930,
+"needed": 16
+},
+"attackbuff.rare.mizar": {
+"id": -919875188,
+"needed": 11
+},
+"attackbuff.rare.sol": {
+"id": -1644493235,
+"needed": 14
+},
+"attackbuff.rare.tauceti": {
+"id": 199397500,
+"needed": 22
+},
+"attackbuff.sirius.draconis": {
+"id": -268835846,
+"needed": 5
+},
+"attackbuff.sirius.sirius": {
+"id": -1230529464,
+"needed": 5
+},
+"attackbuff.sirius.strong.sirius": {
+"id": -719799073,
+"needed": 5
+},
+"attackbuff.sirius.strong.sol": {
+"id": 263201818,
+"needed": 5
+},
+"attackbuff.sirius.strong.tauceti": {
+"id": -971006261,
+"needed": 6
+},
+"attackdroid.62": {
+"id": 917295535,
+"needed": 9
+},
+"attackdroid.64": {
+"id": 917295537,
+"needed": 10
+},
+"attackdroid.67": {
+"id": 917295540,
+"needed": 10
+},
+"attackdroid.69": {
+"id": 917295542,
+"needed": 11
+},
+"attackdroid.84": {
+"id": 917295599,
+"needed": 14
+},
+"attackdroid.86": {
+"id": 917295601,
+"needed": 15
+},
+"attackdroid.88": {
+"id": 917295603,
+"needed": 11
+},
+"attackdroid.90": {
+"id": 917295626,
+"needed": 11
+},
+"attackdroid.rare.draconis": {
+"id": -83791431,
+"needed": 16
+},
+"attackdroid.rare.mizar": {
+"id": 1550406755,
+"needed": 11
+},
+"attackdroid.rare.sol": {
+"id": 562083778,
+"needed": 14
+},
+"attackdroid.sirius.draconis": {
+"id": 257789877,
+"needed": 2
+},
+"attackdroid.sirius.sirius": {
+"id": 510058791,
+"needed": 2
+},
+"attackdroid.sirius.sol": {
+"id": 72655116,
+"needed": 2
+},
+"attackdroid.sirius.strong.sirius": {
+"id": 1843568254,
+"needed": 2
+},
+"attackdroid.sirius.strong.sol": {
+"id": -2043142493,
+"needed": 2
+},
+"attackdroid.sirius.strong.tauceti": {
+"id": -1648887278,
+"needed": 6
+},
+"attackturret.74": {
+"id": 80738312,
+"needed": 14
+},
+"attackturret.84": {
+"id": 80738343,
+"needed": 15
+},
+"attackturret.86": {
+"id": 80738345,
+"needed": 13
+},
+"attackturret.88": {
+"id": 80738347,
+"needed": 12
+},
+"attackturret.90": {
+"id": 80738370,
+"needed": 12
+},
+"attackturret.rare.draconis": {
+"id": 1373141894,
+"needed": 16
+},
+"attackturret.rare.mizar": {
+"id": 2031598876,
+"needed": 11
+},
+"attackturret.rare.sol": {
+"id": -2019095523,
+"needed": 14
+},
+"blaster.84": {
+"id": 433218393,
+"needed": 15
+},
+"blaster.86": {
+"id": 433218395,
+"needed": 11
+},
+"blaster.88": {
+"id": 433218397,
+"needed": 13
+},
+"blaster.90": {
+"id": 433218420,
+"needed": 13
+},
+"blaster.antimatter44": {
+"id": 433218269,
+"needed": 6
+},
+"blaster.antimatter47": {
+"id": 433218272,
+"needed": 7
+},
+"blaster.antimatter49": {
+"id": 433218274,
+"needed": 7
+},
+"blaster.antimatter52": {
+"id": 433218298,
+"needed": 8
+},
+"blaster.antimatter54": {
+"id": 433218300,
+"needed": 8
+},
+"blaster.antimatter57": {
+"id": 433218303,
+"needed": 9
+},
+"blaster.antimatter59": {
+"id": 433218305,
+"needed": 9
+},
+"blaster.conquest": {
+"id": -273646308,
+"needed": null
+},
+"blaster.conquest.crit": {
+"id": 446278297,
+"needed": null
+},
+"blaster.conquest.range": {
+"id": -497971807,
+"needed": null
+},
+"blaster.fusion27": {
+"id": 433218210,
+"needed": 3
+},
+"blaster.fusion29": {
+"id": 433218212,
+"needed": 4
+},
+"blaster.fusion32": {
+"id": 433218236,
+"needed": 4
+},
+"blaster.fusion34": {
+"id": 433218238,
+"needed": 5
+},
+"blaster.fusion37": {
+"id": 433218241,
+"needed": 5
+},
+"blaster.fusion39": {
+"id": 433218243,
+"needed": 6
+},
+"blaster.fusion42": {
+"id": 433218267,
+"needed": 6
+},
+"blaster.ion0": {
+"id": -373364449,
+"needed": 1
+},
+"blaster.ion11": {
+"id": 433218173,
+"needed": 1
+},
+"blaster.ion14": {
+"id": 433218176,
+"needed": 1
+},
+"blaster.ion17": {
+"id": 433218179,
+"needed": 2
+},
+"blaster.ion19": {
+"id": 433218181,
+"needed": 2
+},
+"blaster.ion22": {
+"id": 433218205,
+"needed": 3
+},
+"blaster.ion24": {
+"id": 433218207,
+"needed": 3
+},
+"blaster.ion4": {
+"id": 1953637431,
+"needed": 1
+},
+"blaster.ion7": {
+"id": 1953637434,
+"needed": 1
+},
+"blaster.ion9": {
+"id": 1953637436,
+"needed": 1
+},
+"blaster.ionzero": {
+"id": -286935099,
+"needed": 1
+},
+"blaster.rare.antares": {
+"id": 1740184317,
+"needed": 7
+},
+"blaster.rare.draconis": {
+"id": -717484118,
+"needed": 16
+},
+"blaster.rare.gemini": {
+"id": -613874578,
+"needed": 9
+},
+"blaster.rare.mizar": {
+"id": 881055572,
+"needed": 11
+},
+"blaster.rare.sol": {
+"id": -27672013,
+"needed": 14
+},
+"blaster.rare.tauceti": {
+"id": -1347486108,
+"needed": 22
+},
+"blaster.rare.vega": {
+"id": 1184982618,
+"needed": 5
+},
+"blaster.sirius.gemini": {
+"id": 688271458,
+"needed": 12
+},
+"blaster.sirius.mizar": {
+"id": 1636477884,
+"needed": 12
+},
+"blaster.sirius.quick.gemini": {
+"id": 553771723,
+"needed": 12
+},
+"blaster.sirius.quick.mizar": {
+"id": 413560753,
+"needed": 12
+},
+"blaster.sirius.quick.sirius": {
+"id": 449105621,
+"needed": 12
+},
+"blaster.sirius.quick.vega": {
+"id": 1902090423,
+"needed": 12
+},
+"blaster.sirius.sirius": {
+"id": -1079089640,
+"needed": 12
+},
+"blaster.sirius.strong.antares": {
+"id": 352923594,
+"needed": 12
+},
+"blaster.sirius.strong.draconis": {
+"id": -818270787,
+"needed": 12
+},
+"blaster.sirius.strong.gemini": {
+"id": 43668857,
+"needed": 12
+},
+"blaster.sirius.strong.mizar": {
+"id": -7903917,
+"needed": 12
+},
+"blaster.sirius.strong.sirius": {
+"id": 1093986991,
+"needed": 12
+},
+"blaster.sirius.strong.sol": {
+"id": 1655850324,
+"needed": 12
+},
+"blaster.sirius.strong.tauceti": {
+"id": 1502556227,
+"needed": 6
+},
+"blaster.sirius.strong.vega": {
+"id": -1108124403,
+"needed": 12
+},
+"blaster.sirius.tauceti": {
+"id": -1539216724,
+"needed": 6
+},
+"blaster.sirius.vega": {
+"id": 2136045302,
+"needed": 12
+},
+"blaster.zeropoint62": {
+"id": 433218329,
+"needed": 9
+},
+"blaster.zeropoint64": {
+"id": 433218331,
+"needed": 10
+},
+"blaster.zeropoint67": {
+"id": 433218334,
+"needed": 10
+},
+"blaster.zeropoint69": {
+"id": 433218336,
+"needed": 11
+},
+"bomb.27": {
+"id": 996193509,
+"needed": 3
+},
+"bomb.29": {
+"id": 996193511,
+"needed": 4
+},
+"bomb.32": {
+"id": 996193535,
+"needed": 4
+},
+"bomb.34": {
+"id": 996193537,
+"needed": 5
+},
+"bomb.37": {
+"id": 996193540,
+"needed": 5
+},
+"bomb.39": {
+"id": 996193542,
+"needed": 6
+},
+"bomb.42": {
+"id": 996193566,
+"needed": 6
+},
+"bomb.44": {
+"id": 996193568,
+"needed": 6
+},
+"bomb.47": {
+"id": 996193571,
+"needed": 7
+},
+"bomb.49": {
+"id": 996193573,
+"needed": 7
+},
+"bomb.52": {
+"id": 996193597,
+"needed": 8
+},
+"bomb.54": {
+"id": 996193599,
+"needed": 8
+},
+"bomb.57": {
+"id": 996193602,
+"needed": 9
+},
+"bomb.59": {
+"id": 996193604,
+"needed": 9
+},
+"bomb.62": {
+"id": 996193628,
+"needed": 9
+},
+"bomb.64": {
+"id": 996193630,
+"needed": 10
+},
+"bomb.67": {
+"id": 996193633,
+"needed": 10
+},
+"bomb.69": {
+"id": 996193635,
+"needed": 11
+},
+"bomb.74": {
+"id": 893806580,
+"needed": 6
+},
+"bomb.84": {
+"id": 893806611,
+"needed": 14
+},
+"bomb.86": {
+"id": 893806613,
+"needed": 15
+},
+"bomb.88": {
+"id": 893806615,
+"needed": 11
+},
+"bomb.90": {
+"id": 893806638,
+"needed": 11
+},
+"bomb.rare.draconis": {
+"id": 372586597,
+"needed": 16
+},
+"bomb.rare.gemini": {
+"id": 1157106729,
+"needed": 9
+},
+"bomb.rare.mizar": {
+"id": -18582906,
+"needed": 11
+},
+"bomb.rare.sol": {
+"id": 1857055918,
+"needed": 14
+},
+"bomb.sirius.draconis": {
+"id": -38230687,
+"needed": 2
+},
+"bomb.sirius.rapid.sirius": {
+"id": -566382199,
+"needed": 2
+},
+"bomb.sirius.sirius": {
+"id": 973471050,
+"needed": 2
+},
+"bomb.sirius.strong.draconis": {
+"id": 234540856,
+"needed": 2
+},
+"bomb.sirius.strong.gemini": {
+"id": -370149388,
+"needed": 2
+},
+"bomb.sirius.strong.mizar": {
+"id": 1608022350,
+"needed": 2
+},
+"bomb.sirius.strong.sirius": {
+"id": -2143890335,
+"needed": 2
+},
+"bomb.sirius.strong.tauceti": {
+"id": 1461274686,
+"needed": 6
+},
+"collector.0": {
+"id": -1741306557,
+"needed": 1
+},
+"collector.11": {
+"id": 1854071661,
+"needed": 1
+},
+"collector.14": {
+"id": 1854071664,
+"needed": 1
+},
+"collector.17": {
+"id": 1854071667,
+"needed": 1
+},
+"collector.19": {
+"id": 1854071669,
+"needed": 1
+},
+"collector.22": {
+"id": 1854071693,
+"needed": 1
+},
+"collector.24": {
+"id": 1854071695,
+"needed": 1
+},
+"collector.27": {
+"id": 1854071698,
+"needed": 1
+},
+"collector.29": {
+"id": 1854071700,
+"needed": 1
+},
+"collector.32": {
+"id": 1854071724,
+"needed": 2
+},
+"collector.34": {
+"id": 1854071726,
+"needed": 2
+},
+"collector.37": {
+"id": 1854071729,
+"needed": 2
+},
+"collector.39": {
+"id": 1854071731,
+"needed": 2
+},
+"collector.4": {
+"id": -1741306553,
+"needed": 1
+},
+"collector.42": {
+"id": 1854071755,
+"needed": 2
+},
+"collector.44": {
+"id": 1854071757,
+"needed": 3
+},
+"collector.47": {
+"id": 1854071760,
+"needed": 3
+},
+"collector.49": {
+"id": 1854071762,
+"needed": 3
+},
+"collector.52": {
+"id": 1854071786,
+"needed": 3
+},
+"collector.54": {
+"id": 1854071788,
+"needed": 3
+},
+"collector.57": {
+"id": 1854071791,
+"needed": 4
+},
+"collector.59": {
+"id": 1854071793,
+"needed": 4
+},
+"collector.62": {
+"id": 1854071817,
+"needed": 4
+},
+"collector.64": {
+"id": 1854071819,
+"needed": 4
+},
+"collector.67": {
+"id": 1854071822,
+"needed": 5
+},
+"collector.69": {
+"id": 1854071824,
+"needed": 5
+},
+"collector.7": {
+"id": -1741306550,
+"needed": 1
+},
+"collector.74": {
+"id": 1854071850,
+"needed": 21
+},
+"collector.84": {
+"id": 1854071881,
+"needed": 14
+},
+"collector.86": {
+"id": 1854071883,
+"needed": 12
+},
+"collector.88": {
+"id": 1854071885,
+"needed": 7
+},
+"collector.9": {
+"id": -1741306548,
+"needed": 1
+},
+"collector.90": {
+"id": 1854071908,
+"needed": 7
+},
+"collector.conquest": {
+"id": -896792764,
+"needed": null
+},
+"collector.rare.antares": {
+"id": 1659154661,
+"needed": 5
+},
+"collector.rare.draconis": {
+"id": 2071801426,
+"needed": 9
+},
+"collector.rare.gemini": {
+"id": -1438645738,
+"needed": 6
+},
+"collector.rare.mizar": {
+"id": 670151548,
+"needed": 7
+},
+"collector.rare.sol": {
+"id": -738696549,
+"needed": 8
+},
+"collector.rare.tauceti": {
+"id": -2064689524,
+"needed": 15
+},
+"collector.rare.vega": {
+"id": 686266626,
+"needed": 4
+},
+"collector.sirius.antares": {
+"id": 697609179,
+"needed": 18
+},
+"collector.sirius.draconis": {
+"id": 1660984142,
+"needed": 18
+},
+"collector.sirius.gemini": {
+"id": 88211722,
+"needed": 18
+},
+"collector.sirius.mizar": {
+"id": 781520356,
+"needed": 18
+},
+"collector.sirius.sirius": {
+"id": -1833721536,
+"needed": 18
+},
+"collector.sirius.sol": {
+"id": 208279141,
+"needed": 18
+},
+"collector.sirius.tauceti": {
+"id": -1634217772,
+"needed": 6
+},
+"collector.sirius.vega": {
+"id": -170528098,
+"needed": 18
+},
+"damageconverter.84": {
+"id": -1857097267,
+"needed": 14
+},
+"damageconverter.86": {
+"id": -1857097265,
+"needed": 17
+},
+"damageconverter.88": {
+"id": -1857097263,
+"needed": 13
+},
+"damageconverter.90": {
+"id": -1857097240,
+"needed": 13
+},
+"damageconverter.rare.draconis": {
+"id": 1226155286,
+"needed": 15
+},
+"damageconverter.rare.mizar": {
+"id": 421012160,
+"needed": 13
+},
+"damageconverter.rare.sol": {
+"id": -218055009,
+"needed": 14
+},
+"damageconverter.sirius.quick.sirius": {
+"id": -2055648535,
+"needed": 17
+},
+"damageconverter.sirius.quick.tauceti": {
+"id": -215656747,
+"needed": 6
+},
+"damageconverter.sirius.sirius": {
+"id": 1413066116,
+"needed": 17
+},
+"damageconverter.sirius.strong.sirius": {
+"id": 756019483,
+"needed": 17
+},
+"deflectionrobotlauncher.rare.mizar": {
+"id": -1503979296,
+"needed": 13
+},
+"deflectionrobotlauncher.sirius.strong.tauceti": {
+"id": 805071055,
+"needed": 6
+},
+"flare.17": {
+"id": -778880396,
+"needed": 2
+},
+"flare.19": {
+"id": -778880394,
+"needed": 2
+},
+"flare.22": {
+"id": -778880370,
+"needed": 3
+},
+"flare.24": {
+"id": -778880368,
+"needed": 3
+},
+"flare.27": {
+"id": -778880365,
+"needed": 3
+},
+"flare.29": {
+"id": -778880363,
+"needed": 4
+},
+"flare.32": {
+"id": -778880339,
+"needed": 4
+},
+"flare.34": {
+"id": -778880337,
+"needed": 5
+},
+"flare.37": {
+"id": -778880334,
+"needed": 5
+},
+"flare.39": {
+"id": -778880332,
+"needed": 6
+},
+"flare.40": {
+"id": -778880310,
+"needed": 6
+},
+"flare.42": {
+"id": -778880308,
+"needed": 6
+},
+"flare.44": {
+"id": -778880306,
+"needed": 6
+},
+"flare.47": {
+"id": -778880303,
+"needed": 7
+},
+"flare.49": {
+"id": -778880301,
+"needed": 7
+},
+"flare.52": {
+"id": -778880277,
+"needed": 8
+},
+"flare.54": {
+"id": -778880275,
+"needed": 8
+},
+"flare.57": {
+"id": -778880272,
+"needed": 9
+},
+"flare.59": {
+"id": -778880270,
+"needed": 9
+},
+"flare.62": {
+"id": -778880246,
+"needed": 9
+},
+"flare.64": {
+"id": -778880244,
+"needed": 10
+},
+"flare.67": {
+"id": -778880241,
+"needed": 10
+},
+"flare.69": {
+"id": -778880239,
+"needed": 11
+},
+"flare.74": {
+"id": -778880213,
+"needed": 14
+},
+"flare.83": {
+"id": -778880183,
+"needed": 12
+},
+"flare.84": {
+"id": -778880182,
+"needed": 13
+},
+"flare.86": {
+"id": -778880180,
+"needed": 15
+},
+"flare.88": {
+"id": -778880178,
+"needed": 13
+},
+"flare.90": {
+"id": -778880155,
+"needed": 13
+},
+"flare.rare.antares": {
+"id": 1484832806,
+"needed": 7
+},
+"flare.rare.draconis": {
+"id": -2052916205,
+"needed": 16
+},
+"flare.rare.gemini": {
+"id": -917614121,
+"needed": 9
+},
+"flare.rare.mizar": {
+"id": -2136168899,
+"needed": 11
+},
+"flare.rare.sol": {
+"id": -1234322212,
+"needed": 14
+},
+"flare.sirius.long.gemini": {
+"id": 1321751495,
+"needed": 5
+},
+"flare.sirius.strong.gemini": {
+"id": -901980894,
+"needed": 5
+},
+"flare.sirius.strong.mizar": {
+"id": -352314500,
+"needed": 5
+},
+"flare.sirius.strong.sirius": {
+"id": -1043904552,
+"needed": 5
+},
+"formationaura.84": {
+"id": -1756391536,
+"needed": 14
+},
+"formationaura.86": {
+"id": -1756391534,
+"needed": 17
+},
+"formationaura.88": {
+"id": -1756391532,
+"needed": 13
+},
+"formationaura.90": {
+"id": -1756391509,
+"needed": 13
+},
+"formationaura.rare.draconis": {
+"id": -1914987303,
+"needed": 15
+},
+"formationaura.rare.mizar": {
+"id": 886406403,
+"needed": 13
+},
+"formationaura.rare.sol": {
+"id": 295797922,
+"needed": 14
+},
+"formationaura.sirius.quick.sirius": {
+"id": 99721606,
+"needed": 18
+},
+"formationaura.sirius.quick.tauceti": {
+"id": -792217486,
+"needed": 6
+},
+"formationaura.sirius.sirius": {
+"id": 1839392967,
+"needed": 18
+},
+"formationaura.sirius.strong.sirius": {
+"id": -1146982882,
+"needed": 18
+},
+"formationaura.sirius.strong.tauceti": {
+"id": 1267676338,
+"needed": 6
+},
+"formationaura.sirius.tauceti": {
+"id": -2047005093,
+"needed": 6
+},
+"item": {
+"id": -608541389,
+"needed": 1
+},
+"lightningchain.84": {
+"id": 535562099,
+"needed": 16
+},
+"lightningchain.86": {
+"id": 535562101,
+"needed": 15
+},
+"lightningchain.88": {
+"id": 535562103,
+"needed": 13
+},
+"lightningchain.90": {
+"id": 535562126,
+"needed": 13
+},
+"lightningchain.sirius.strong.tauceti": {
+"id": 1498725607,
+"needed": 6
+},
+"magnetarraylauncher.84": {
+"id": -1559354101,
+"needed": 9
+},
+"magnetarraylauncher.86": {
+"id": -1559354099,
+"needed": 17
+},
+"magnetarraylauncher.88": {
+"id": -1559354097,
+"needed": 13
+},
+"magnetarraylauncher.90": {
+"id": -1559354074,
+"needed": 13
+},
+"magnetarraylauncher.sirius.quick.tauceti": {
+"id": -1537008041,
+"needed": 6
+},
+"magnetarraylauncher.sirius.sirius": {
+"id": 1215047362,
+"needed": 15
+},
+"magnetarraylauncher.sirius.strong.tauceti": {
+"id": -345994387,
+"needed": 6
+},
+"mine.84": {
+"id": 743819055,
+"needed": 9
+},
+"mine.86": {
+"id": 743819057,
+"needed": 9
+},
+"mine.88": {
+"id": 743819059,
+"needed": 8
+},
+"mine.90": {
+"id": 743819082,
+"needed": 8
+},
+"mine.rare.draconis": {
+"id": -1514750706,
+"needed": 16
+},
+"mine.rare.mizar": {
+"id": 1900752804,
+"needed": 11
+},
+"mine.rare.sol": {
+"id": 1327511589,
+"needed": 14
+},
+"mine.sirius.draconis": {
+"id": 484335250,
+"needed": 2
+},
+"mine.sirius.rapid.draconis": {
+"id": -1526452822,
+"needed": 2
+},
+"mine.sirius.rapid.sirius": {
+"id": -258793060,
+"needed": 2
+},
+"mine.sirius.rapid.tauceti": {
+"id": 543718704,
+"needed": 6
+},
+"mine.sirius.sirius": {
+"id": -285263008,
+"needed": 2
+},
+"mine.sirius.strong.sirius": {
+"id": 613591543,
+"needed": 2
+},
+"nanitecloudfield.84": {
+"id": 450239680,
+"needed": 9
+},
+"nanitecloudfield.86": {
+"id": 450239682,
+"needed": 17
+},
+"nanitecloudfield.88": {
+"id": 450239684,
+"needed": 13
+},
+"nanitecloudfield.90": {
+"id": 450239707,
+"needed": 13
+},
+"nanitecloudfield.rare.draconis": {
+"id": -686310049,
+"needed": 15
+},
+"nanitecloudfield.rare.mizar": {
+"id": 124056821,
+"needed": 13
+},
+"nanitecloudfield.rare.sol": {
+"id": 1787811062,
+"needed": 14
+},
+"nanitecloudfield.sirius.quick.sirius": {
+"id": 950888924,
+"needed": 16
+},
+"nanitecloudfield.sirius.sirius": {
+"id": 812958385,
+"needed": 16
+},
+"nanitecloudfield.sirius.strong.sirius": {
+"id": -530599800,
+"needed": 16
+},
+"nanitecloudfield.sirius.strong.tauceti": {
+"id": -1825017484,
+"needed": 6
+},
+"orbitalstrike.62": {
+"id": 1474971106,
+"needed": 9
+},
+"orbitalstrike.64": {
+"id": 1474971108,
+"needed": 10
+},
+"orbitalstrike.67": {
+"id": 1474971111,
+"needed": 10
+},
+"orbitalstrike.69": {
+"id": 1474971113,
+"needed": 11
+},
+"orbitalstrike.84": {
+"id": 1474971170,
+"needed": 12
+},
+"orbitalstrike.86": {
+"id": 1474971172,
+"needed": 14
+},
+"orbitalstrike.88": {
+"id": 1474971174,
+"needed": 13
+},
+"orbitalstrike.90": {
+"id": 1474971197,
+"needed": 13
+},
+"orbitalstrike.rare.draconis": {
+"id": -648352468,
+"needed": 16
+},
+"orbitalstrike.rare.mizar": {
+"id": -2141926058,
+"needed": 11
+},
+"orbitalstrike.rare.sol": {
+"id": 1562432757,
+"needed": 14
+},
+"orbitalstrike.sirius.rapid.draconis": {
+"id": -52683308,
+"needed": 2
+},
+"orbitalstrike.sirius.rapid.sirius": {
+"id": 590063650,
+"needed": 2
+},
+"orbitalstrike.sirius.sirius": {
+"id": -1188939494,
+"needed": 2
+},
+"orbitalstrike.sirius.sol": {
+"id": -627076161,
+"needed": 2
+},
+"orbitalstrike.sirius.strong.sirius": {
+"id": 1158345777,
+"needed": 2
+},
+"orbitalstrike.sirius.strong.sol": {
+"id": -1644101866,
+"needed": 2
+},
+"orbitalstrike.sirius.strong.tauceti": {
+"id": -721962299,
+"needed": 6
+},
+"perforator.17": {
+"id": 1026634632,
+"needed": 2
+},
+"perforator.19": {
+"id": 1026634634,
+"needed": 2
+},
+"perforator.22": {
+"id": 1026634658,
+"needed": 3
+},
+"perforator.24": {
+"id": 1026634660,
+"needed": 3
+},
+"perforator.27": {
+"id": 1026634663,
+"needed": 3
+},
+"perforator.29": {
+"id": 1026634665,
+"needed": 4
+},
+"perforator.32": {
+"id": 1026634689,
+"needed": 4
+},
+"perforator.34": {
+"id": 1026634691,
+"needed": 5
+},
+"perforator.37": {
+"id": 1026634694,
+"needed": 5
+},
+"perforator.39": {
+"id": 1026634696,
+"needed": 6
+},
+"perforator.42": {
+"id": 1026634720,
+"needed": 6
+},
+"perforator.44": {
+"id": 1026634722,
+"needed": 6
+},
+"perforator.47": {
+"id": 1026634725,
+"needed": 7
+},
+"perforator.49": {
+"id": 1026634727,
+"needed": 7
+},
+"perforator.52": {
+"id": 1026634751,
+"needed": 8
+},
+"perforator.54": {
+"id": 1026634753,
+"needed": 8
+},
+"perforator.57": {
+"id": 1026634756,
+"needed": 9
+},
+"perforator.59": {
+"id": 1026634758,
+"needed": 9
+},
+"perforator.62": {
+"id": 1026634782,
+"needed": 9
+},
+"perforator.64": {
+"id": 1026634784,
+"needed": 10
+},
+"perforator.67": {
+"id": 1026634787,
+"needed": 10
+},
+"perforator.69": {
+"id": 1026634789,
+"needed": 11
+},
+"perforator.74": {
+"id": 1026634815,
+"needed": 21
+},
+"perforator.83": {
+"id": 1026634845,
+"needed": null
+},
+"perforator.84": {
+"id": 1026634846,
+"needed": 9
+},
+"perforator.86": {
+"id": 1026634848,
+"needed": 14
+},
+"perforator.88": {
+"id": 1026634850,
+"needed": 13
+},
+"perforator.90": {
+"id": 1026634873,
+"needed": 13
+},
+"perforator.rare.antares": {
+"id": -629357430,
+"needed": 7
+},
+"perforator.rare.draconis": {
+"id": -722209603,
+"needed": 16
+},
+"perforator.rare.gemini": {
+"id": 2123078009,
+"needed": 9
+},
+"perforator.rare.mizar": {
+"id": -1223682861,
+"needed": 11
+},
+"perforator.rare.sol": {
+"id": -1948300908,
+"needed": 14
+},
+"perforator.sirius.antares": {
+"id": -372496300,
+"needed": 5
+},
+"perforator.sirius.mizar": {
+"id": -2066217109,
+"needed": 5
+},
+"perforator.sirius.sirius": {
+"id": -1534337137,
+"needed": 5
+},
+"perforator.sirius.sol": {
+"id": 1638141706,
+"needed": 5
+},
+"protect.34": {
+"id": -608541328,
+"needed": 5
+},
+"protect.37": {
+"id": -608541325,
+"needed": 5
+},
+"protect.39": {
+"id": -608541323,
+"needed": 6
+},
+"protect.42": {
+"id": -608541299,
+"needed": 6
+},
+"protect.44": {
+"id": -608541297,
+"needed": 6
+},
+"protect.47": {
+"id": -608541294,
+"needed": 7
+},
+"protect.49": {
+"id": -608541292,
+"needed": 7
+},
+"protect.conquest": {
+"id": -548777146,
+"needed": null
+},
+"protect.conquest.long": {
+"id": 1605134437,
+"needed": null
+},
+"protect.conquest.short": {
+"id": 1059736822,
+"needed": null
+},
+"protect.ion11": {
+"id": -608541393,
+"needed": 1
+},
+"protect.ion14": {
+"id": -608541390,
+"needed": 1
+},
+"protect.ion17": {
+"id": -608541387,
+"needed": 2
+},
+"protect.ion19": {
+"id": -608541385,
+"needed": 2
+},
+"protect.ion22": {
+"id": -608541361,
+"needed": 3
+},
+"protect.ion24": {
+"id": -608541359,
+"needed": 3
+},
+"protect.ion27": {
+"id": -608541356,
+"needed": 3
+},
+"protect.ion29": {
+"id": -608541354,
+"needed": 4
+},
+"protect.ion32": {
+"id": -608541330,
+"needed": 4
+},
+"protect.ion52": {
+"id": -608541268,
+"needed": 8
+},
+"protect.ion54": {
+"id": -608541266,
+"needed": 8
+},
+"protect.ion57": {
+"id": -608541263,
+"needed": 9
+},
+"protect.ion59": {
+"id": -608541261,
+"needed": 9
+},
+"protect.ion62": {
+"id": -608541237,
+"needed": 9
+},
+"protect.ion64": {
+"id": -608541235,
+"needed": 10
+},
+"protect.ion67": {
+"id": -608541232,
+"needed": 10
+},
+"protect.ion69": {
+"id": -608541230,
+"needed": 11
+},
+"protect.ion74": {
+"id": -608541204,
+"needed": 14
+},
+"protect.ion83": {
+"id": -608541174,
+"needed": 12
+},
+"protect.ion84": {
+"id": -608541173,
+"needed": 16
+},
+"protect.ion85": {
+"id": -608541172,
+"needed": null
+},
+"protect.ion86": {
+"id": -608541171,
+"needed": 14
+},
+"protect.ion88": {
+"id": -608541169,
+"needed": 13
+},
+"protect.ion9": {
+"id": -989461686,
+"needed": 1
+},
+"protect.ion90": {
+"id": -608541146,
+"needed": 13
+},
+"protect.rare.antares": {
+"id": 1465053479,
+"needed": 7
+},
+"protect.rare.draconis": {
+"id": -992614956,
+"needed": 16
+},
+"protect.rare.gemini": {
+"id": -889005416,
+"needed": 9
+},
+"protect.rare.mizar": {
+"id": 605924734,
+"needed": 11
+},
+"protect.rare.sol": {
+"id": -302802851,
+"needed": 14
+},
+"protect.rare.vega": {
+"id": 909851780,
+"needed": 5
+},
+"protect.sirius.rapid.antares": {
+"id": 1362116212,
+"needed": 5
+},
+"protect.sirius.rapid.draconis": {
+"id": 190921831,
+"needed": 5
+},
+"protect.sirius.rapid.gemini": {
+"id": 1052861475,
+"needed": 5
+},
+"protect.sirius.rapid.mizar": {
+"id": 1001288701,
+"needed": 5
+},
+"protect.sirius.rapid.sirius": {
+"id": 2103179609,
+"needed": 5
+},
+"protect.sirius.rapid.sol": {
+"id": -1629924354,
+"needed": 5
+},
+"protect.sirius.rapid.tauceti": {
+"id": -1783218451,
+"needed": 6
+},
+"protect.sirius.rapid.vega": {
+"id": -98931785,
+"needed": 5
+},
+"protect.sirius.sirius": {
+"id": -1354220478,
+"needed": 5
+},
+"protect.sirius.strong.draconis": {
+"id": -1519353556,
+"needed": 5
+},
+"protect.sirius.strong.gemini": {
+"id": 2110681584,
+"needed": 5
+},
+"protect.sirius.strong.sirius": {
+"id": 2006015482,
+"needed": 5
+},
+"rangeleech.84": {
+"id": 1978245712,
+"needed": 12
+},
+"rangeleech.rare.draconis": {
+"id": -260884689,
+"needed": 15
+},
+"rangeleech.rare.mizar": {
+"id": -762357947,
+"needed": 13
+},
+"rangeleech.rare.sol": {
+"id": -1486975994,
+"needed": 14
+},
+"rangeleech.sirius.quick.sirius": {
+"id": -1682039668,
+"needed": 15
+},
+"rangeleech.sirius.quick.tauceti": {
+"id": 110972192,
+"needed": 6
+},
+"rangeleech.sirius.sirius": {
+"id": -1073012223,
+"needed": 15
+},
+"rangeleech.sirius.strong.sirius": {
+"id": -547007528,
+"needed": 15
+},
+"rangeleech.sirius.strong.tauceti": {
+"id": -798214716,
+"needed": 6
+},
+"rangeleech.sirius.tauceti": {
+"id": 816637165,
+"needed": 6
+},
+"remoterepair.11": {
+"id": -1706309453,
+"needed": 1
+},
+"remoterepair.14": {
+"id": -1706309450,
+"needed": 1
+},
+"remoterepair.17": {
+"id": -1706309447,
+"needed": 2
+},
+"remoterepair.19": {
+"id": -1706309445,
+"needed": 2
+},
+"remoterepair.22": {
+"id": -1706309421,
+"needed": 3
+},
+"remoterepair.24": {
+"id": -1706309419,
+"needed": 3
+},
+"remoterepair.27": {
+"id": -1706309416,
+"needed": 3
+},
+"remoterepair.29": {
+"id": -1706309414,
+"needed": 4
+},
+"remoterepair.32": {
+"id": -1706309390,
+"needed": 4
+},
+"remoterepair.34": {
+"id": -1706309388,
+"needed": 5
+},
+"remoterepair.37": {
+"id": -1706309385,
+"needed": 5
+},
+"remoterepair.39": {
+"id": -1706309383,
+"needed": 6
+},
+"remoterepair.42": {
+"id": -1706309359,
+"needed": 6
+},
+"remoterepair.44": {
+"id": -1706309357,
+"needed": 6
+},
+"remoterepair.47": {
+"id": -1706309354,
+"needed": 7
+},
+"remoterepair.49": {
+"id": -1706309352,
+"needed": 7
+},
+"remoterepair.52": {
+"id": -1706309328,
+"needed": 8
+},
+"remoterepair.54": {
+"id": -1706309326,
+"needed": 8
+},
+"remoterepair.57": {
+"id": -1706309323,
+"needed": 9
+},
+"remoterepair.59": {
+"id": -1706309321,
+"needed": 9
+},
+"remoterepair.62": {
+"id": -1706309297,
+"needed": 9
+},
+"remoterepair.64": {
+"id": -1706309295,
+"needed": 10
+},
+"remoterepair.67": {
+"id": -1706309292,
+"needed": 10
+},
+"remoterepair.69": {
+"id": -1706309290,
+"needed": 11
+},
+"remoterepair.74": {
+"id": -1706309264,
+"needed": 21
+},
+"remoterepair.84": {
+"id": -1706309233,
+"needed": 13
+},
+"remoterepair.86": {
+"id": -1706309231,
+"needed": 14
+},
+"remoterepair.88": {
+"id": -1706309229,
+"needed": 13
+},
+"remoterepair.9": {
+"id": -55042234,
+"needed": 1
+},
+"remoterepair.90": {
+"id": -1706309206,
+"needed": 13
+},
+"remoterepair.rare.antares": {
+"id": 580773883,
+"needed": 7
+},
+"remoterepair.rare.draconis": {
+"id": 1544148846,
+"needed": 16
+},
+"remoterepair.rare.gemini": {
+"id": -28623574,
+"needed": 9
+},
+"remoterepair.rare.mizar": {
+"id": 664685060,
+"needed": 11
+},
+"remoterepair.rare.sol": {
+"id": 91443845,
+"needed": 14
+},
+"remoterepair.rare.vega": {
+"id": -287363394,
+"needed": 5
+},
+"remoterepair.sirius.rapid.vega": {
+"id": 1901303450,
+"needed": 12
+},
+"remoterepair.sirius.sol": {
+"id": 2099024507,
+"needed": 12
+},
+"remoterepair.sirius.strong.antares": {
+"id": 639774748,
+"needed": 12
+},
+"remoterepair.sirius.strong.draconis": {
+"id": -1565462007,
+"needed": 12
+},
+"remoterepair.sirius.strong.gemini": {
+"id": 1495285709,
+"needed": 12
+},
+"remoterepair.sirius.strong.mizar": {
+"id": 1963264051,
+"needed": 12
+},
+"remoterepair.sirius.strong.sirius": {
+"id": -922715049,
+"needed": 12
+},
+"remoterepair.sirius.strong.tauceti": {
+"id": -1814654141,
+"needed": 6
+},
+"remoterepair.sirius.strong.vega": {
+"id": -1142893383,
+"needed": 12
+},
+"repair.0": {
+"id": 1094177347,
+"needed": 1
+},
+"repair.11": {
+"id": -440240531,
+"needed": 1
+},
+"repair.14": {
+"id": -440240528,
+"needed": 1
+},
+"repair.17": {
+"id": -440240525,
+"needed": 1
+},
+"repair.19": {
+"id": -440240523,
+"needed": 1
+},
+"repair.22": {
+"id": -440240499,
+"needed": 2
+},
+"repair.24": {
+"id": -440240497,
+"needed": 2
+},
+"repair.27": {
+"id": -440240494,
+"needed": 3
+},
+"repair.29": {
+"id": -440240492,
+"needed": 3
+},
+"repair.32": {
+"id": -440240468,
+"needed": 3
+},
+"repair.34": {
+"id": -440240466,
+"needed": 3
+},
+"repair.37": {
+"id": -440240463,
+"needed": 4
+},
+"repair.39": {
+"id": -440240461,
+"needed": 4
+},
+"repair.4": {
+"id": 1628925235,
+"needed": 1
+},
+"repair.42": {
+"id": -440240437,
+"needed": 5
+},
+"repair.44": {
+"id": -440240435,
+"needed": 5
+},
+"repair.47": {
+"id": -440240432,
+"needed": 5
+},
+"repair.49": {
+"id": -440240430,
+"needed": 6
+},
+"repair.52": {
+"id": -440240406,
+"needed": 6
+},
+"repair.54": {
+"id": -440240404,
+"needed": 6
+},
+"repair.57": {
+"id": -440240401,
+"needed": 7
+},
+"repair.59": {
+"id": -440240399,
+"needed": 7
+},
+"repair.62": {
+"id": -440240375,
+"needed": 7
+},
+"repair.64": {
+"id": -440240373,
+"needed": 8
+},
+"repair.67": {
+"id": -440240370,
+"needed": 8
+},
+"repair.69": {
+"id": -440240368,
+"needed": 8
+},
+"repair.7": {
+"id": 1094177354,
+"needed": 1
+},
+"repair.74": {
+"id": -440240342,
+"needed": 6
+},
+"repair.84": {
+"id": -440240311,
+"needed": 14
+},
+"repair.86": {
+"id": -440240309,
+"needed": 13
+},
+"repair.88": {
+"id": -440240307,
+"needed": 10
+},
+"repair.9": {
+"id": 1094177356,
+"needed": 1
+},
+"repair.90": {
+"id": -440240284,
+"needed": 10
+},
+"repair.conquest": {
+"id": -1773553610,
+"needed": null
+},
+"repair.conquest.fast": {
+"id": 1842775442,
+"needed": null
+},
+"repair.conquest.slow": {
+"id": 1843173175,
+"needed": null
+},
+"repair.rare.antares": {
+"id": -877307339,
+"needed": 6
+},
+"repair.rare.draconis": {
+"id": 1121623016,
+"needed": 14
+},
+"repair.rare.gemini": {
+"id": 1956249252,
+"needed": 8
+},
+"repair.rare.mizar": {
+"id": -1459210498,
+"needed": 9
+},
+"repair.rare.sol": {
+"id": 728233023,
+"needed": 12
+},
+"repair.rare.tauceti": {
+"id": -145625618,
+"needed": 22
+},
+"repair.rare.vega": {
+"id": -1726501064,
+"needed": 5
+},
+"repair.sirius.antares": {
+"id": 2048013055,
+"needed": 14
+},
+"repair.sirius.draconis": {
+"id": -1834307476,
+"needed": 14
+},
+"repair.sirius.gemini": {
+"id": -1049787344,
+"needed": 14
+},
+"repair.sirius.long.antares": {
+"id": -270179845,
+"needed": 14
+},
+"repair.sirius.long.sirius": {
+"id": -1432020682,
+"needed": 14
+},
+"repair.sirius.mizar": {
+"id": 1059009942,
+"needed": 14
+},
+"repair.sirius.sirius": {
+"id": 1387052986,
+"needed": 14
+},
+"repair.sirius.sol": {
+"id": -349838155,
+"needed": 14
+},
+"repair.sirius.strong.antares": {
+"id": -1739641258,
+"needed": 14
+},
+"repair.sirius.strong.gemini": {
+"id": -1472522553,
+"needed": 14
+},
+"repair.sirius.strong.mizar": {
+"id": -1612733523,
+"needed": 14
+},
+"repair.sirius.strong.sirius": {
+"id": -1577188655,
+"needed": 14
+},
+"repair.sirius.strong.sol": {
+"id": 2043166604,
+"needed": 14
+},
+"repair.sirius.strong.tauceti": {
+"id": 1899674301,
+"needed": 6
+},
+"repair.sirius.tauceti": {
+"id": -1675831130,
+"needed": 6
+},
+"repair.sirius.vega": {
+"id": 1075125020,
+"needed": 14
+},
+"repair.zero": {
+"id": 2132840373,
+"needed": 1
+},
+"repairfield.17": {
+"id": -766310285,
+"needed": 2
+},
+"repairfield.19": {
+"id": -766310283,
+"needed": 2
+},
+"repairfield.22": {
+"id": -766310259,
+"needed": 3
+},
+"repairfield.24": {
+"id": -766310257,
+"needed": 3
+},
+"repairfield.27": {
+"id": -766310254,
+"needed": 3
+},
+"repairfield.29": {
+"id": -766310252,
+"needed": 4
+},
+"repairfield.32": {
+"id": -766310228,
+"needed": 4
+},
+"repairfield.34": {
+"id": -766310226,
+"needed": 5
+},
+"repairfield.37": {
+"id": -766310223,
+"needed": 5
+},
+"repairfield.39": {
+"id": -766310221,
+"needed": 6
+},
+"repairfield.42": {
+"id": -766310197,
+"needed": 6
+},
+"repairfield.44": {
+"id": -766310195,
+"needed": 6
+},
+"repairfield.47": {
+"id": -766310192,
+"needed": 7
+},
+"repairfield.49": {
+"id": -766310190,
+"needed": 7
+},
+"repairfield.52": {
+"id": -766310166,
+"needed": 8
+},
+"repairfield.54": {
+"id": -766310164,
+"needed": 8
+},
+"repairfield.57": {
+"id": -766310161,
+"needed": 9
+},
+"repairfield.59": {
+"id": -766310159,
+"needed": 9
+},
+"repairfield.62": {
+"id": -766310135,
+"needed": 9
+},
+"repairfield.64": {
+"id": -766310133,
+"needed": 10
+},
+"repairfield.67": {
+"id": -766310130,
+"needed": 10
+},
+"repairfield.69": {
+"id": -766310128,
+"needed": 11
+},
+"repairfield.84": {
+"id": -766310071,
+"needed": 14
+},
+"repairfield.86": {
+"id": -766310069,
+"needed": 15
+},
+"repairfield.88": {
+"id": -766310067,
+"needed": 10
+},
+"repairfield.90": {
+"id": -766310044,
+"needed": 10
+},
+"repairfield.conquest": {
+"id": 1291688580,
+"needed": null
+},
+"repairfield.conquest.range": {
+"id": -81358535,
+"needed": null
+},
+"repairfield.conquest.self": {
+"id": 135956432,
+"needed": null
+},
+"repairfield.rare.antares": {
+"id": 835870693,
+"needed": 7
+},
+"repairfield.rare.draconis": {
+"id": -2042546670,
+"needed": 16
+},
+"repairfield.rare.gemini": {
+"id": 262023382,
+"needed": 9
+},
+"repairfield.rare.mizar": {
+"id": -408348484,
+"needed": 11
+},
+"repairfield.rare.sol": {
+"id": -1396671461,
+"needed": 14
+},
+"repairfield.sirius.rapid.sirius": {
+"id": -560395396,
+"needed": 2
+},
+"repairfield.sirius.rapid.sol": {
+"id": 422605495,
+"needed": 2
+},
+"repairfield.sirius.strong.antares": {
+"id": -1896858702,
+"needed": 2
+},
+"repairfield.sirius.strong.draconis": {
+"id": -1413806043,
+"needed": 2
+},
+"repairfield.sirius.strong.gemini": {
+"id": 1594421729,
+"needed": 2
+},
+"repairfield.sirius.strong.mizar": {
+"id": -53050181,
+"needed": 2
+},
+"repairfield.sirius.strong.sirius": {
+"id": -146146281,
+"needed": 2
+},
+"repairfield.sirius.strong.tauceti": {
+"id": 656365483,
+"needed": 6
+},
+"repairturret.74": {
+"id": 917777146,
+"needed": 21
+},
+"repairturret.84": {
+"id": 917777177,
+"needed": 15
+},
+"repairturret.86": {
+"id": 917777179,
+"needed": 15
+},
+"repairturret.88": {
+"id": 917777181,
+"needed": 10
+},
+"repairturret.90": {
+"id": 917777204,
+"needed": 10
+},
+"repairturret.rare.draconis": {
+"id": -339230942,
+"needed": 16
+},
+"repairturret.rare.mizar": {
+"id": -1401900980,
+"needed": 11
+},
+"repairturret.rare.sol": {
+"id": 1875591531,
+"needed": 14
+},
+"repairturret.sirius.sirius": {
+"id": 2043057680,
+"needed": 5
+},
+"repairturret.sirius.tauceti": {
+"id": 262217124,
+"needed": 6
+},
+"resurrect.27": {
+"id": 440759462,
+"needed": 3
+},
+"resurrect.29": {
+"id": 440759464,
+"needed": 4
+},
+"resurrect.32": {
+"id": 440759488,
+"needed": 4
+},
+"resurrect.34": {
+"id": 440759490,
+"needed": 5
+},
+"resurrect.37": {
+"id": 440759493,
+"needed": 5
+},
+"resurrect.39": {
+"id": 440759495,
+"needed": 6
+},
+"resurrect.42": {
+"id": 440759519,
+"needed": 6
+},
+"resurrect.44": {
+"id": 440759521,
+"needed": 6
+},
+"resurrect.47": {
+"id": 440759524,
+"needed": 7
+},
+"resurrect.49": {
+"id": 440759526,
+"needed": 7
+},
+"resurrect.52": {
+"id": 440759550,
+"needed": 8
+},
+"resurrect.54": {
+"id": 440759552,
+"needed": 8
+},
+"resurrect.57": {
+"id": 440759555,
+"needed": 9
+},
+"resurrect.59": {
+"id": 440759557,
+"needed": 9
+},
+"resurrect.62": {
+"id": 440759581,
+"needed": 9
+},
+"resurrect.64": {
+"id": 440759583,
+"needed": 10
+},
+"resurrect.67": {
+"id": 440759586,
+"needed": 10
+},
+"resurrect.69": {
+"id": 440759588,
+"needed": 11
+},
+"resurrect.84": {
+"id": 440759645,
+"needed": 13
+},
+"resurrect.86": {
+"id": 440759647,
+"needed": 15
+},
+"resurrect.88": {
+"id": 440759649,
+"needed": 13
+},
+"resurrect.90": {
+"id": 440759672,
+"needed": 13
+},
+"resurrect.rare.draconis": {
+"id": -1625754522,
+"needed": 16
+},
+"resurrect.rare.gemini": {
+"id": -841234390,
+"needed": 9
+},
+"resurrect.rare.mizar": {
+"id": 1267562896,
+"needed": 11
+},
+"resurrect.rare.sol": {
+"id": -141285201,
+"needed": 14
+},
+"resurrect.sirius.rapid.mizar": {
+"id": 1208035332,
+"needed": 2
+},
+"resurrect.sirius.sirius": {
+"id": -1236310188,
+"needed": 2
+},
+"resurrect.sirius.sol": {
+"id": 805690489,
+"needed": 2
+},
+"resurrect.sirius.strong.draconis": {
+"id": 1762117241,
+"needed": 2
+},
+"resurrect.sirius.strong.gemini": {
+"id": 1157426997,
+"needed": 2
+},
+"resurrect.sirius.strong.sirius": {
+"id": 1195839211,
+"needed": 2
+},
+"resurrect.sirius.strong.tauceti": {
+"id": -1306116225,
+"needed": 6
+},
+"rocket.0": {
+"id": -2050339783,
+"needed": 1
+},
+"rocket.11": {
+"id": -518199308,
+"needed": 1
+},
+"rocket.14": {
+"id": -518199305,
+"needed": 1
+},
+"rocket.17": {
+"id": -518199302,
+"needed": 2
+},
+"rocket.19": {
+"id": -518199300,
+"needed": 2
+},
+"rocket.22": {
+"id": -518199276,
+"needed": 3
+},
+"rocket.24": {
+"id": -518199274,
+"needed": 3
+},
+"rocket.27": {
+"id": -518199271,
+"needed": 3
+},
+"rocket.29": {
+"id": -518199269,
+"needed": 4
+},
+"rocket.32": {
+"id": -518199245,
+"needed": 4
+},
+"rocket.34": {
+"id": -518199243,
+"needed": 5
+},
+"rocket.37": {
+"id": -518199240,
+"needed": 5
+},
+"rocket.39": {
+"id": -518199238,
+"needed": 6
+},
+"rocket.42": {
+"id": -518199214,
+"needed": 6
+},
+"rocket.44": {
+"id": -518199212,
+"needed": 6
+},
+"rocket.47": {
+"id": -518199209,
+"needed": 7
+},
+"rocket.49": {
+"id": -518199207,
+"needed": 7
+},
+"rocket.52": {
+"id": -518199183,
+"needed": 8
+},
+"rocket.54": {
+"id": -518199181,
+"needed": 8
+},
+"rocket.57": {
+"id": -518199178,
+"needed": 9
+},
+"rocket.59": {
+"id": -518199176,
+"needed": 9
+},
+"rocket.62": {
+"id": -518199152,
+"needed": 9
+},
+"rocket.64": {
+"id": -518199150,
+"needed": 10
+},
+"rocket.67": {
+"id": -518199147,
+"needed": 10
+},
+"rocket.69": {
+"id": -518199145,
+"needed": 11
+},
+"rocket.84": {
+"id": -518199088,
+"needed": 15
+},
+"rocket.85": {
+"id": -518199087,
+"needed": null
+},
+"rocket.86": {
+"id": -518199086,
+"needed": 14
+},
+"rocket.88": {
+"id": -518199084,
+"needed": 13
+},
+"rocket.9": {
+"id": 1368757221,
+"needed": 1
+},
+"rocket.90": {
+"id": -518199061,
+"needed": 13
+},
+"rocket.rare.antares": {
+"id": -868449924,
+"needed": 7
+},
+"rocket.rare.draconis": {
+"id": 1130480431,
+"needed": 16
+},
+"rocket.rare.gemini": {
+"id": 1965106667,
+"needed": 9
+},
+"rocket.rare.mizar": {
+"id": -1450353083,
+"needed": 11
+},
+"rocket.rare.sol": {
+"id": 737090438,
+"needed": 14
+},
+"rocket.rare.vega": {
+"id": -1717643649,
+"needed": 5
+},
+"rocket.sirius.antares": {
+"id": 2056870470,
+"needed": 2
+},
+"rocket.sirius.mizar": {
+"id": 1067867357,
+"needed": 2
+},
+"rocket.sirius.rapid.draconis": {
+"id": -582729431,
+"needed": 2
+},
+"rocket.sirius.rapid.vega": {
+"id": 270599289,
+"needed": 2
+},
+"rocket.sirius.sirius": {
+"id": 1395910401,
+"needed": 2
+},
+"rocket.sirius.strong.antares": {
+"id": -1770552227,
+"needed": 2
+},
+"rocket.sirius.strong.mizar": {
+"id": -1643644492,
+"needed": 2
+},
+"rocket.sirius.strong.sol": {
+"id": 2012255635,
+"needed": 2
+},
+"rocket.sirius.strong.tauceti": {
+"id": 1868763332,
+"needed": 6
+},
+"rocket.sirius.strong.vega": {
+"id": -155114822,
+"needed": 2
+},
+"rocket.sirius.vega": {
+"id": 1083982435,
+"needed": 2
+},
+"shield.27": {
+"id": -1817510026,
+"needed": 3
+},
+"shield.29": {
+"id": -1817510024,
+"needed": 4
+},
+"shield.32": {
+"id": -1817510000,
+"needed": 4
+},
+"shield.34": {
+"id": -1817509998,
+"needed": 5
+},
+"shield.37": {
+"id": -1817509995,
+"needed": 5
+},
+"shield.39": {
+"id": -1817509993,
+"needed": 6
+},
+"shield.42": {
+"id": -1817509969,
+"needed": 6
+},
+"shield.44": {
+"id": -1817509967,
+"needed": 6
+},
+"shield.47": {
+"id": -1817509964,
+"needed": 7
+},
+"shield.49": {
+"id": -1817509962,
+"needed": 7
+},
+"shield.52": {
+"id": -1817509938,
+"needed": 8
+},
+"shield.54": {
+"id": -1817509936,
+"needed": 8
+},
+"shield.57": {
+"id": -1817509933,
+"needed": 9
+},
+"shield.59": {
+"id": -1817509931,
+"needed": 9
+},
+"shield.62": {
+"id": -1817509907,
+"needed": 9
+},
+"shield.64": {
+"id": -1817509905,
+"needed": 10
+},
+"shield.67": {
+"id": -1817509902,
+"needed": 10
+},
+"shield.69": {
+"id": -1817509900,
+"needed": 11
+},
+"shield.84": {
+"id": -1817509843,
+"needed": 10
+},
+"shield.85": {
+"id": -1817509842,
+"needed": null
+},
+"shield.86": {
+"id": -1817509841,
+"needed": 16
+},
+"shield.88": {
+"id": -1817509839,
+"needed": 13
+},
+"shield.90": {
+"id": -1817509816,
+"needed": 13
+},
+"shield.ion11": {
+"id": -1817510063,
+"needed": 1
+},
+"shield.ion14": {
+"id": -1817510060,
+"needed": 1
+},
+"shield.ion17": {
+"id": -1817510057,
+"needed": 2
+},
+"shield.ion19": {
+"id": -1817510055,
+"needed": 2
+},
+"shield.ion22": {
+"id": -1817510031,
+"needed": 3
+},
+"shield.ion24": {
+"id": -1817510029,
+"needed": 3
+},
+"shield.ion7": {
+"id": -1721197338,
+"needed": 1
+},
+"shield.ion9": {
+"id": -1721197336,
+"needed": 1
+},
+"shield.rare.antares": {
+"id": -846112239,
+"needed": 7
+},
+"shield.rare.draconis": {
+"id": 1152818116,
+"needed": 16
+},
+"shield.rare.gemini": {
+"id": 1987444352,
+"needed": 9
+},
+"shield.rare.mizar": {
+"id": -1428015398,
+"needed": 11
+},
+"shield.rare.sol": {
+"id": 759428123,
+"needed": 14
+},
+"shield.rare.vega": {
+"id": -1695305964,
+"needed": 5
+},
+"shield.sirius.rapid.antares": {
+"id": 1422580018,
+"needed": 2
+},
+"shield.sirius.rapid.gemini": {
+"id": 1689698723,
+"needed": 2
+},
+"shield.sirius.rapid.mizar": {
+"id": 1549487753,
+"needed": 2
+},
+"shield.sirius.rapid.sirius": {
+"id": 1585032621,
+"needed": 2
+},
+"shield.sirius.rapid.tauceti": {
+"id": 766928281,
+"needed": 6
+},
+"shield.sirius.rapid.vega": {
+"id": -1256949873,
+"needed": 2
+},
+"shield.sirius.strong.draconis": {
+"id": 628653492,
+"needed": 2
+},
+"sniperblaster.62": {
+"id": -433200879,
+"needed": 9
+},
+"sniperblaster.64": {
+"id": -433200877,
+"needed": 10
+},
+"sniperblaster.67": {
+"id": -433200874,
+"needed": 10
+},
+"sniperblaster.69": {
+"id": -433200872,
+"needed": 11
+},
+"sniperblaster.83": {
+"id": -1904231855,
+"needed": null
+},
+"sniperblaster.84": {
+"id": -1904231854,
+"needed": 13
+},
+"sniperblaster.85": {
+"id": -1904231853,
+"needed": null
+},
+"sniperblaster.86": {
+"id": -1904231852,
+"needed": 16
+},
+"sniperblaster.88": {
+"id": -1904231850,
+"needed": 13
+},
+"sniperblaster.90": {
+"id": -1904231827,
+"needed": 13
+},
+"sniperblaster.rare.draconis": {
+"id": 1289324571,
+"needed": 16
+},
+"sniperblaster.rare.mizar": {
+"id": -204249019,
+"needed": 11
+},
+"sniperblaster.rare.sol": {
+"id": -794857500,
+"needed": 14
+},
+"sniperblaster.rare.tauceti": {
+"id": -2077686955,
+"needed": 22
+},
+"sniperblaster.sirius.draconis": {
+"id": -1163520233,
+"needed": 2
+},
+"sniperblaster.sirius.sirius": {
+"id": 748737545,
+"needed": 2
+},
+"sniperblaster.sirius.sol": {
+"id": 1182977570,
+"needed": 2
+},
+"sniperblaster.sirius.strong.draconis": {
+"id": -520249234,
+"needed": 2
+},
+"sniperblaster.sirius.strong.sirius": {
+"id": -2069930016,
+"needed": 2
+},
+"sniperblaster.sirius.strong.sol": {
+"id": -577410363,
+"needed": 2
+},
+"sniperblaster.sirius.strong.tauceti": {
+"id": 344729204,
+"needed": 6
+},
+"speedbuff.11": {
+"id": -1786839878,
+"needed": 1
+},
+"speedbuff.14": {
+"id": -1786839875,
+"needed": 1
+},
+"speedbuff.17": {
+"id": -1786839872,
+"needed": 2
+},
+"speedbuff.19": {
+"id": -1786839870,
+"needed": 2
+},
+"speedbuff.22": {
+"id": -1786839846,
+"needed": 3
+},
+"speedbuff.24": {
+"id": -1786839844,
+"needed": 3
+},
+"speedbuff.27": {
+"id": -1786839841,
+"needed": 3
+},
+"speedbuff.29": {
+"id": -1786839839,
+"needed": 4
+},
+"speedbuff.32": {
+"id": -1786839815,
+"needed": 4
+},
+"speedbuff.34": {
+"id": -1786839813,
+"needed": 5
+},
+"speedbuff.37": {
+"id": -1786839810,
+"needed": 5
+},
+"speedbuff.39": {
+"id": -1786839808,
+"needed": 6
+},
+"speedbuff.42": {
+"id": -1786839784,
+"needed": 6
+},
+"speedbuff.44": {
+"id": -1786839782,
+"needed": 6
+},
+"speedbuff.47": {
+"id": -1786839779,
+"needed": 7
+},
+"speedbuff.49": {
+"id": -1786839777,
+"needed": 7
+},
+"speedbuff.52": {
+"id": -1786839753,
+"needed": 8
+},
+"speedbuff.54": {
+"id": -1786839751,
+"needed": 8
+},
+"speedbuff.57": {
+"id": -1786839748,
+"needed": 9
+},
+"speedbuff.59": {
+"id": -1786839746,
+"needed": 9
+},
+"speedbuff.62": {
+"id": -1786839722,
+"needed": 9
+},
+"speedbuff.64": {
+"id": -1786839720,
+"needed": 10
+},
+"speedbuff.67": {
+"id": -1786839717,
+"needed": 10
+},
+"speedbuff.69": {
+"id": -1786839715,
+"needed": 11
+},
+"speedbuff.74": {
+"id": -1786839689,
+"needed": 14
+},
+"speedbuff.84": {
+"id": -1786839658,
+"needed": 13
+},
+"speedbuff.86": {
+"id": -1786839656,
+"needed": 14
+},
+"speedbuff.88": {
+"id": -1786839654,
+"needed": 11
+},
+"speedbuff.9": {
+"id": 635096671,
+"needed": 1
+},
+"speedbuff.90": {
+"id": -1786839631,
+"needed": 11
+},
+"speedbuff.conquest": {
+"id": -127397935,
+"needed": null
+},
+"speedbuff.rare.antares": {
+"id": -1866417806,
+"needed": 7
+},
+"speedbuff.rare.draconis": {
+"id": -1453771041,
+"needed": 16
+},
+"speedbuff.rare.gemini": {
+"id": -669250909,
+"needed": 9
+},
+"speedbuff.rare.mizar": {
+"id": 1439546377,
+"needed": 11
+},
+"speedbuff.rare.sol": {
+"id": 30698280,
+"needed": 14
+},
+"speedbuff.rare.vega": {
+"id": 1455661455,
+"needed": 5
+},
+"speedbuff.sirius.draconis": {
+"id": -1864588325,
+"needed": 5
+},
+"speedbuff.sirius.long.sirius": {
+"id": 974045641,
+"needed": 5
+},
+"speedbuff.sirius.long.tauceti": {
+"id": 1382614877,
+"needed": 6
+},
+"speedbuff.sirius.long.vega": {
+"id": -1228065753,
+"needed": 5
+},
+"speedbuff.sirius.mizar": {
+"id": 1550915185,
+"needed": 5
+},
+"speedbuff.sirius.sirius": {
+"id": -1064326707,
+"needed": 5
+},
+"speedbuff.sirius.sol": {
+"id": 977673970,
+"needed": 5
+},
+"speedbuff.sirius.strong.antares": {
+"id": 762789119,
+"needed": 5
+},
+"speedbuff.sirius.strong.mizar": {
+"id": 1899902024,
+"needed": 5
+},
+"speedbuff.sirius.strong.sirius": {
+"id": -39857500,
+"needed": 5
+},
+"speedbuff.sirius.strong.sol": {
+"id": -1255073783,
+"needed": 5
+},
+"speedbuff.sirius.strong.tauceti": {
+"id": 1753154360,
+"needed": 6
+},
+"stickybomb.74": {
+"id": -1904312280,
+"needed": 6
+},
+"stickybomb.84": {
+"id": -1904312249,
+"needed": 10
+},
+"stickybomb.86": {
+"id": -1904312247,
+"needed": 14
+},
+"stickybomb.88": {
+"id": -1904312245,
+"needed": 13
+},
+"stickybomb.90": {
+"id": -1904312222,
+"needed": 13
+},
+"stickybomb.rare.draconis": {
+"id": 365242086,
+"needed": 16
+},
+"stickybomb.rare.mizar": {
+"id": -136231172,
+"needed": 11
+},
+"stickybomb.sirius.sirius": {
+"id": -446885448,
+"needed": 2
+},
+"stickybomb.sirius.strong.sirius": {
+"id": -975413681,
+"needed": 2
+},
+"stickybomb.sirius.strong.tauceti": {
+"id": -1226620869,
+"needed": 6
+},
+"stunbuff.11": {
+"id": -827153683,
+"needed": 1
+},
+"stunbuff.14": {
+"id": -827153680,
+"needed": 1
+},
+"stunbuff.17": {
+"id": -827153677,
+"needed": 2
+},
+"stunbuff.19": {
+"id": -827153675,
+"needed": 2
+},
+"stunbuff.22": {
+"id": -827153651,
+"needed": 3
+},
+"stunbuff.24": {
+"id": -827153649,
+"needed": 3
+},
+"stunbuff.27": {
+"id": -827153646,
+"needed": 3
+},
+"stunbuff.29": {
+"id": -827153644,
+"needed": 4
+},
+"stunbuff.32": {
+"id": -827153620,
+"needed": 4
+},
+"stunbuff.34": {
+"id": -827153618,
+"needed": 5
+},
+"stunbuff.37": {
+"id": -827153615,
+"needed": 5
+},
+"stunbuff.39": {
+"id": -827153613,
+"needed": 6
+},
+"stunbuff.42": {
+"id": -827153589,
+"needed": 6
+},
+"stunbuff.44": {
+"id": -827153587,
+"needed": 6
+},
+"stunbuff.47": {
+"id": -827153584,
+"needed": 7
+},
+"stunbuff.49": {
+"id": -827153582,
+"needed": 7
+},
+"stunbuff.52": {
+"id": -827153558,
+"needed": 8
+},
+"stunbuff.54": {
+"id": -827153556,
+"needed": 8
+},
+"stunbuff.57": {
+"id": -827153553,
+"needed": 9
+},
+"stunbuff.59": {
+"id": -827153551,
+"needed": 9
+},
+"stunbuff.62": {
+"id": -827153527,
+"needed": 9
+},
+"stunbuff.64": {
+"id": -827153525,
+"needed": 10
+},
+"stunbuff.67": {
+"id": -827153522,
+"needed": 10
+},
+"stunbuff.69": {
+"id": -827153520,
+"needed": 11
+},
+"stunbuff.74": {
+"id": -827153494,
+"needed": 6
+},
+"stunbuff.84": {
+"id": -827153463,
+"needed": 9
+},
+"stunbuff.86": {
+"id": -827153461,
+"needed": 12
+},
+"stunbuff.88": {
+"id": -827153459,
+"needed": 12
+},
+"stunbuff.9": {
+"id": -1689250356,
+"needed": 1
+},
+"stunbuff.90": {
+"id": -827153436,
+"needed": 12
+},
+"stunbuff.rare.antares": {
+"id": 1046650037,
+"needed": 7
+},
+"stunbuff.rare.draconis": {
+"id": -2126627416,
+"needed": 16
+},
+"stunbuff.rare.gemini": {
+"id": 1085268324,
+"needed": 9
+},
+"stunbuff.rare.mizar": {
+"id": 183462718,
+"needed": 11
+},
+"stunbuff.rare.sol": {
+"id": 2077678655,
+"needed": 14
+},
+"stunbuff.rare.vega": {
+"id": 1015266552,
+"needed": 5
+},
+"stunbuff.sirius.long.draconis": {
+"id": -1905159768,
+"needed": 2
+},
+"stunbuff.sirius.long.gemini": {
+"id": 1724875372,
+"needed": 2
+},
+"stunbuff.sirius.long.mizar": {
+"id": 1584664402,
+"needed": 2
+},
+"stunbuff.sirius.long.vega": {
+"id": -1221773224,
+"needed": 2
+},
+"stunbuff.sirius.sirius": {
+"id": -451496710,
+"needed": 2
+},
+"stunbuff.sirius.strong.antares": {
+"id": 949970518,
+"needed": 2
+},
+"stunbuff.sirius.strong.mizar": {
+"id": -1645747731,
+"needed": 2
+},
+"stunbuff.sirius.strong.tauceti": {
+"id": -2066123523,
+"needed": 6
+},
+"stundome.27": {
+"id": -775228894,
+"needed": 3
+},
+"stundome.29": {
+"id": -775228892,
+"needed": 4
+},
+"stundome.32": {
+"id": -775228868,
+"needed": 4
+},
+"stundome.34": {
+"id": -775228866,
+"needed": 5
+},
+"stundome.37": {
+"id": -775228863,
+"needed": 5
+},
+"stundome.39": {
+"id": -775228861,
+"needed": 6
+},
+"stundome.42": {
+"id": -775228837,
+"needed": 6
+},
+"stundome.44": {
+"id": -775228835,
+"needed": 6
+},
+"stundome.47": {
+"id": -775228832,
+"needed": 7
+},
+"stundome.49": {
+"id": -775228830,
+"needed": 7
+},
+"stundome.52": {
+"id": -775228806,
+"needed": 8
+},
+"stundome.54": {
+"id": -775228804,
+"needed": 8
+},
+"stundome.57": {
+"id": -775228801,
+"needed": 9
+},
+"stundome.59": {
+"id": -775228799,
+"needed": 9
+},
+"stundome.62": {
+"id": -775228775,
+"needed": 9
+},
+"stundome.64": {
+"id": -775228773,
+"needed": 10
+},
+"stundome.67": {
+"id": -775228770,
+"needed": 10
+},
+"stundome.69": {
+"id": -775228768,
+"needed": 11
+},
+"stundome.84": {
+"id": -775228711,
+"needed": 8
+},
+"stundome.85": {
+"id": -775228710,
+"needed": null
+},
+"stundome.86": {
+"id": -775228709,
+"needed": 14
+},
+"stundome.88": {
+"id": -775228707,
+"needed": 13
+},
+"stundome.90": {
+"id": -775228684,
+"needed": 13
+},
+"stundome.rare.draconis": {
+"id": -2126573384,
+"needed": 16
+},
+"stundome.rare.gemini": {
+"id": 1085322356,
+"needed": 9
+},
+"stundome.rare.mizar": {
+"id": 183516750,
+"needed": 11
+},
+"stundome.rare.sol": {
+"id": 2077732687,
+"needed": 14
+},
+"stundome.sirius.long.mizar": {
+"id": -55256478,
+"needed": 2
+},
+"stundome.sirius.long.sirius": {
+"id": -19711610,
+"needed": 2
+},
+"stundome.sirius.mizar": {
+"id": 2126771942,
+"needed": 2
+},
+"stundome.sirius.strong.mizar": {
+"id": -1356715779,
+"needed": 2
+},
+"stundome.sirius.strong.sirius": {
+"id": -1557835999,
+"needed": 2
+},
+"targetteleportation.84": {
+"id": -1423170187,
+"needed": 9
+},
+"targetteleportation.86": {
+"id": -1423170185,
+"needed": 17
+},
+"targetteleportation.88": {
+"id": -1423170183,
+"needed": 13
+},
+"targetteleportation.90": {
+"id": -1423170160,
+"needed": 13
+},
+"targetteleportation.rare.draconis": {
+"id": 169154622,
+"needed": 14
+},
+"targetteleportation.rare.tauceti": {
+"id": -456802312,
+"needed": 22
+},
+"targetteleportation.sirius.quick.tauceti": {
+"id": 1068846509,
+"needed": 6
+},
+"targetteleportation.sirius.strong.tauceti": {
+"id": -1168881961,
+"needed": 6
+},
+"taunt.11": {
+"id": -1535285746,
+"needed": 1
+},
+"taunt.14": {
+"id": -1535285743,
+"needed": 1
+},
+"taunt.17": {
+"id": -1535285740,
+"needed": 2
+},
+"taunt.19": {
+"id": -1535285738,
+"needed": 2
+},
+"taunt.22": {
+"id": -1535285714,
+"needed": 3
+},
+"taunt.24": {
+"id": -1535285712,
+"needed": 3
+},
+"taunt.27": {
+"id": -1535285709,
+"needed": 3
+},
+"taunt.29": {
+"id": -1535285707,
+"needed": 4
+},
+"taunt.32": {
+"id": -1535285683,
+"needed": 4
+},
+"taunt.34": {
+"id": -1535285681,
+"needed": 5
+},
+"taunt.37": {
+"id": -1535285678,
+"needed": 5
+},
+"taunt.39": {
+"id": -1535285676,
+"needed": 6
+},
+"taunt.42": {
+"id": -1535285652,
+"needed": 6
+},
+"taunt.44": {
+"id": -1535285650,
+"needed": 6
+},
+"taunt.47": {
+"id": -1535285647,
+"needed": 7
+},
+"taunt.49": {
+"id": -1535285645,
+"needed": 7
+},
+"taunt.52": {
+"id": -1535285621,
+"needed": 8
+},
+"taunt.54": {
+"id": -1535285619,
+"needed": 8
+},
+"taunt.57": {
+"id": -1535285616,
+"needed": 9
+},
+"taunt.59": {
+"id": -1535285614,
+"needed": 9
+},
+"taunt.62": {
+"id": -1535285590,
+"needed": 9
+},
+"taunt.64": {
+"id": -1535285588,
+"needed": 10
+},
+"taunt.67": {
+"id": -1535285585,
+"needed": 10
+},
+"taunt.69": {
+"id": -1535285583,
+"needed": 11
+},
+"taunt.84": {
+"id": -1535285526,
+"needed": 10
+},
+"taunt.86": {
+"id": -1535285524,
+"needed": 15
+},
+"taunt.88": {
+"id": -1535285522,
+"needed": 13
+},
+"taunt.9": {
+"id": -880809333,
+"needed": 1
+},
+"taunt.90": {
+"id": -1535285499,
+"needed": 13
+},
+"taunt.rare.antares": {
+"id": 1497453510,
+"needed": 7
+},
+"taunt.rare.draconis": {
+"id": -2040295501,
+"needed": 16
+},
+"taunt.rare.gemini": {
+"id": -904993417,
+"needed": 9
+},
+"taunt.rare.mizar": {
+"id": -2123548195,
+"needed": 11
+},
+"taunt.rare.sol": {
+"id": -1221701508,
+"needed": 14
+},
+"taunt.rare.tauceti": {
+"id": 274130157,
+"needed": 22
+},
+"taunt.rare.vega": {
+"id": 361681507,
+"needed": 5
+},
+"taunt.sirius.gemini": {
+"id": 1630436971,
+"needed": 12
+},
+"taunt.sirius.long.sirius": {
+"id": -1656244323,
+"needed": 12
+},
+"taunt.sirius.rapid.gemini": {
+"id": -348451471,
+"needed": 12
+},
+"taunt.sirius.rapid.mizar": {
+"id": -330720297,
+"needed": 12
+},
+"taunt.sirius.rapid.sol": {
+"id": -921328778,
+"needed": 12
+},
+"taunt.sirius.rapid.tauceti": {
+"id": 2090809063,
+"needed": 6
+},
+"taunt.sirius.rapid.vega": {
+"id": 220548701,
+"needed": 12
+},
+"taunt.sirius.sirius": {
+"id": -1061901919,
+"needed": 12
+},
+"taunt.sirius.sol": {
+"id": -1672119994,
+"needed": 12
+},
+"timedamage.27": {
+"id": 1867163585,
+"needed": 3
+},
+"timedamage.29": {
+"id": 1867163587,
+"needed": 4
+},
+"timedamage.32": {
+"id": 1867163611,
+"needed": 4
+},
+"timedamage.34": {
+"id": 1867163613,
+"needed": 5
+},
+"timedamage.37": {
+"id": 1867163616,
+"needed": 5
+},
+"timedamage.39": {
+"id": 1867163618,
+"needed": 6
+},
+"timedamage.42": {
+"id": 1867163642,
+"needed": 6
+},
+"timedamage.44": {
+"id": 1867163644,
+"needed": 6
+},
+"timedamage.47": {
+"id": 1867163647,
+"needed": 7
+},
+"timedamage.49": {
+"id": 1867163649,
+"needed": 7
+},
+"timedamage.52": {
+"id": 1867163673,
+"needed": 8
+},
+"timedamage.54": {
+"id": 1867163675,
+"needed": 8
+},
+"timedamage.57": {
+"id": 1867163678,
+"needed": 9
+},
+"timedamage.59": {
+"id": 1867163680,
+"needed": 9
+},
+"timedamage.62": {
+"id": 1867163704,
+"needed": 9
+},
+"timedamage.64": {
+"id": 1867163706,
+"needed": 10
+},
+"timedamage.67": {
+"id": 1867163709,
+"needed": 10
+},
+"timedamage.69": {
+"id": 1867163711,
+"needed": 11
+},
+"timedamage.74": {
+"id": 1867163737,
+"needed": 6
+},
+"timedamage.84": {
+"id": 1867163768,
+"needed": 10
+},
+"timedamage.86": {
+"id": 1867163770,
+"needed": 15
+},
+"timedamage.88": {
+"id": 1867163772,
+"needed": 13
+},
+"timedamage.90": {
+"id": 1867163795,
+"needed": 13
+},
+"timedamage.rare.draconis": {
+"id": -1490049193,
+"needed": 16
+},
+"timedamage.rare.gemini": {
+"id": 1355238419,
+"needed": 9
+},
+"timedamage.rare.mizar": {
+"id": -1991522451,
+"needed": 11
+},
+"timedamage.rare.sol": {
+"id": 1578826798,
+"needed": 14
+},
+"timedamage.rare.tauceti": {
+"id": -872249763,
+"needed": 22
+},
+"timedamage.sirius.gemini": {
+"id": 1443179423,
+"needed": 2
+},
+"timedamage.sirius.sirius": {
+"id": 1992790569,
+"needed": 2
+},
+"timedamage.sirius.sol": {
+"id": 870302116,
+"needed": 2
+},
+"timedamage.sirius.strong.mizar": {
+"id": -1758144292,
+"needed": 2
+},
+"timedamage.sirius.strong.sirius": {
+"id": -1761147392,
+"needed": 2
+},
+"timedamage.sirius.strong.tauceti": {
+"id": -2012354580,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.blue": {
+"id": -1937660667,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.cyan": {
+"id": -734325860,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.green": {
+"id": -955043860,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.orange": {
+"id": -731013967,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.pink": {
+"id": 490940009,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.red": {
+"id": 457823646,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.violett": {
+"id": -193488934,
+"needed": 6
+},
+"upgrade.enginetrail.tricolor.white": {
+"id": 1402529030,
+"needed": 6
+},
+"upgrade.itemslot.aggrobeacon": {
+"id": 1253705820,
+"needed": 6
+},
+"upgrade.itemslot.attackbuff": {
+"id": -630514461,
+"needed": 6
+},
+"upgrade.itemslot.attackdroid": {
+"id": 1894457514,
+"needed": 6
+},
+"upgrade.itemslot.formationaura": {
+"id": -78844854,
+"needed": 6
+},
+"upgrade.itemslot.protect": {
+"id": -2039269329,
+"needed": 6
+},
+"upgrade.itemslot.rangeleech": {
+"id": -9242230,
+"needed": 6
+},
+"upgrade.itemslot.repairfield": {
+"id": 1739283121,
+"needed": 6
+},
+"upgrade.itemslot.rocket": {
+"id": -1220082934,
+"needed": 6
+},
+"upgrade.itemslot.shield": {
+"id": -1218417835,
+"needed": 6
+},
+"upgrade.itemslot.sniperblaster": {
+"id": -87374904,
+"needed": 6
+},
+"upgrade.itemslot.stickybomb": {
+"id": 1726144883,
+"needed": 6
+}
+}
