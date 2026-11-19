@@ -246,6 +246,56 @@ class TravelMixin:
                 return
         raise self._fail(f"{key}-no-{zone}", f"{key} did not lead to {zone}")
 
+    def _hyperjump(self, world):
+        """While travelling between planets: skip the flight with the travel panel's Hyperjump button (user,
+        2026-11-19) when the jump leaves energy at or above 'Refill below energy'. At most two tries per trip (the second after
+        Space opened the panel).
+
+        The price, from the client (class_1355.method_6690, shown as TravelPrice): max(1000, 250 x rank) /
+        clamp(2.5 - rank / 99, 1.5, 2.5) x (share of the trip left, in 5 % steps, rounded down) x trip seconds / 900,
+        times a membership factor (at most 1, 0 in battle mode). With the time left counted from when the bot first
+        saw the trip (the whole trip when that was mid-way) and no membership discount, the estimate is never below
+        the real price. The panel (Space) is checked by its button image before the click; the jump ends the travel
+        flag."""
+        now = time.monotonic()
+        if self.travel_seen is None:
+            self.travel_seen = (now, world.travel_s)
+        if not self.config.hyperjump or self.hyperjump_tries >= 2 or now < self.hyperjump_next:
+            return
+        started, trip = self.travel_seen
+        # The panel opens with the trip and is still fading in for a moment: checked at once (13:42:08) it matched
+        # 0.37, and the Space press meant to open it closed it instead.
+        if not trip or world.rank_raw is None or world.energy is None or now - started < HYPERJUMP_SETTLE_S:
+            return
+        left = trip + 2 - (now - started)
+        if left < HYPERJUMP_MIN_LEFT_S:
+            return
+        self.hyperjump_tries += 1
+        self.hyperjump_next = now + 3.0
+        rank = world.rank_raw
+        factor = min(2.5, max(1.5, 2.5 - rank / 99))
+        cost = max(1000, 250 * rank) / factor * left / 900
+        cap = max(world.energy_cap or 0, getattr(self, "energy_seen", 0) or 0) or 1
+        after = world.energy - cost
+        if after < self.config.refill_below * cap:
+            self._debug(f"hyperjump: about {cost:,.0f} energy would leave {after:,.0f} of {cap:,} "
+                        f"(below {self.config.refill_below:.0%}); flying")
+            return
+        if not self._ui_shows("travel_hyperjump"):
+            if self.hyperjump_tries == 1:
+                self._key("SPACE")  # opens the travel panel; checked again on the next try
+            else:
+                self._debug("hyperjump: no Hyperjump button in the travel panel; flying")
+            return
+        energy = world.energy
+        self._click(HYPERJUMP_BUTTON)
+        arrived = self._wait(lambda w: not w.travelling, 15, "hyperjump")
+        if arrived is None:
+            self._log("warning", "Hyperjump clicked, but the trip went on; flying")
+            return
+        used = energy - (arrived.energy if arrived.energy is not None else energy)
+        self._log("info", f"Hyperjump: {left:.0f} s of flight skipped for {used:,} energy (estimated {cost:,.0f})")
+
     def _starmap(self, world):
         if self.config.mode == "fly" and self.destination is None:
             self._setup_fly()
@@ -301,6 +351,17 @@ class TravelMixin:
                     time.sleep(0.8)
                     current = self._read()
                     selected = current.selected_target if current else None
+                    # The first row may need a few tries: right after a zone change both clicks of the old version
+                    # selected nothing and the bot paused ("Molikar not found", server 2026-11-19 09:52), while the
+                    # same clicks worked a minute later. A second Space can close a list that opened late.
+                    tries = 1
+                    while selected is None and row == 0 and tries < STARMAP_FIRST_TRIES:
+                        time.sleep(1.0)
+                        self._click(STARMAP_ROW, row)
+                        time.sleep(0.8)
+                        current = self._read()
+                        selected = current.selected_target if current else None
+                        tries += 1
                     if selected is None:
                         break  # list not open: press Space again
                     if selected.name not in seen:

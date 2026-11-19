@@ -35,6 +35,20 @@ class MovementMixin:
                                                    f"cost")
         return nav
 
+    @staticmethod
+    def _click_height(nav, x, y, world):
+        """Height of the surface a ground click lands on. A planet without terrain (UseTerrain=false) is one flat plane
+        at height 0 (client class_3336; ships fly about 181 above it). Clicks were projected at the ship's height there,
+        so every click ray met the plane about 350 units short: the game's move target (ship.amE.djx.djq, read live
+        2026-11-19 on Technatoria) lay a median 347 from the aimed point, and short moves became crawls ("stuck")."""
+        if nav is not None:
+            ground = nav.ground_height(x, y)
+            if ground is not None:
+                return ground
+            if not nav.terrain:
+                return 0.0
+        return world.ship_height
+
     def _check_stuck(self, world, nav):
         """Called while moving. Detect no progress and remember the blocked spot ahead of the ship."""
         now = time.monotonic()
@@ -305,8 +319,8 @@ class MovementMixin:
             # Cutting a corner must not cross terrain (the route keeps its wall margin; the straight click may not).
             if nav is not None and line is path and len(path) > 2 and not nav.line_clear(start, (tx, ty)):
                 continue
-            ground = nav.ground_height(tx, ty) if nav is not None else None
-            height = ground if ground is not None else world.ship_height
+            ground = self._click_height(nav, tx, ty, world)
+            height = ground
             pixel = self._project_on(camera, tx, ty, height)
             # A click with terrain between camera and ground point lands on that terrain instead.
             if pixel is not None and nav is not None and height is not None \
@@ -326,8 +340,7 @@ class MovementMixin:
             if waited > NO_CLICK_RELAX_S:
                 for line, hop in candidates:
                     tx, ty = _point_along(line, hop)
-                    ground = nav.ground_height(tx, ty) if nav is not None else None
-                    pixel = self._project_on(camera, tx, ty, ground if ground is not None else world.ship_height)
+                    pixel = self._project_on(camera, tx, ty, self._click_height(nav, tx, ty, world))
                     if pixel is not None:
                         break
             if pixel is None and waited > NO_CLICK_GIVE_UP_S:
@@ -348,7 +361,7 @@ class MovementMixin:
             # Not on screen or hidden by terrain: turn the camera toward where the ship is going, click next tick.
             # face=False: the camera belongs to something else (shooting); skip this click instead.
             if face and not self._face(world, waypoint[0], waypoint[1], f"looking toward {label}", tolerance=15.0):
-                self._warn_once(f"move-{label}", f"Cannot find a clickable point toward {label}")
+                self._debug(f"Cannot find a clickable point toward {label}")
             return True
         self.no_click_since = None
         self._debug(f"move toward {label}: waypoint ({waypoint[0]:.0f}, {waypoint[1]:.0f}) click ground "

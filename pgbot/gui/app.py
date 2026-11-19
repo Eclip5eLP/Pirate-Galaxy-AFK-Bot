@@ -1,5 +1,6 @@
 """Control window: Farming tab (status, ship values, mode, live map, log) and Settings tab (all bot settings)."""
 import base64
+import collections
 import math
 import pathlib
 import queue
@@ -804,6 +805,7 @@ class ControlApp:
         now = time.monotonic()
         if not world.travelling:
             self._travel = None
+            self._travel_info = None
             self._travel_seen_start = True
             if world.zone == "starmap" and world.selected_target is not None:
                 self._travel_pick = world.selected_target.name
@@ -821,12 +823,16 @@ class ControlApp:
             dest = getattr(self.bot, "travel_to", None)
         dest = assets.display_name(dest) if dest else "?"
         text = f"Travelling  ·  {place} → {dest}"
+        left = None
         if travel[0] is not None and travel[1]:
             left = max(0, int(travel[1] + 2 - (now - travel[0])))
             text += f"  ·  {left // 60}:{left % 60:02d} left"
+        # For the remote page (user, 2026-11-19: it showed no time left): where to and the arrival as a wall clock time.
+        self._travel_info = {"from": place, "to": dest, "arrive": time.time() + left if left is not None else None}
         return text
 
     def _show(self, snapshot):
+        self._last_snapshot = snapshot  # for remote commands (chat: not in a fight)
         world = snapshot.world
         self.connection.configure(text="Connected to the game" if snapshot.connected else "Game not running",
                                   fg=COLORS["ok"] if snapshot.connected else COLORS["error"])
@@ -937,6 +943,25 @@ class ControlApp:
             completed = bot.blueprints.completed
         return report.report(Learner(store=store), self.config.learning, completed, squads=SQUAD_BY_MOVEMENT)
 
+    def _remote_chat(self):
+        """The last chat lines for the remote page (game/chat.py), read in their own thread; [] when there is no
+        game. The game's process is looked up at most every 10 s (the extras are built on every remote tick)."""
+        from ..game import chat
+        now = time.monotonic()
+        if now - getattr(self, "_chat_checked", 0.0) > 10.0:
+            self._chat_checked = now
+            pids = location.game_pids()
+            pid = pids[0] if len(pids) == 1 else None
+            watcher = getattr(self, "_chat_watcher", None)
+            if watcher is not None and (watcher.pid != pid or not watcher.thread.is_alive()):
+                watcher.stop()
+                watcher = None
+            if watcher is None and pid is not None:
+                watcher = chat.ChatWatcher(pid)
+            self._chat_watcher = watcher
+        watcher = getattr(self, "_chat_watcher", None)
+        return watcher.recent(60) if watcher is not None else []
+
     def _remote_extras(self):
         bot = self.bot
         running = bot is not None and bot.running
@@ -946,7 +971,12 @@ class ControlApp:
             "energy_max": self._session.get("energy_max"),
             "session": {"start": round(self._session["start"]), "cryonite_start": self._session["cryonite"],
                         "xp_start": self._session["xp"]},
+            "chat": self._remote_chat(),
+            "travel": getattr(self, "_travel_info", None),
+            "chat_channels": [c["channel"] for c in (self._chat_watcher.channels()
+                                                       if getattr(self, "_chat_watcher", None) else [])],
         }
+        extras["chat_sent"] = self._remote_chat_sends(extras["chat"])
         if running:
             caution = getattr(bot, "caution", None)
             extras["caution"] = caution
@@ -1031,7 +1061,71 @@ class ControlApp:
             return self._remote_set_setting(args)
         if cmd in ("set_learn_switch", "reset_learned"):
             return self._remote_learned_command(cmd, args)
+        if cmd == "send_chat":
+            return self._remote_send_chat(args)
         return False, f"unknown command {cmd!r}"
+
+    def _remote_send_chat(self, args):
+        """A chat message from the web page (user, 2026-11-19): typed into the game's chat box by the bot at a calm
+        moment (bot/chatsend.py), or right away when the bot is not running and the ship is not in a fight. Its state
+        goes back with the chat lines; "sent" once the chat reader sees the message in the game's chat."""
+        from ..bot.chatsend import CHANNELS, MAX_LEN, ChatSender
+        channel, text = args.get("channel"), args.get("text")
+        if not isinstance(channel, str) or not isinstance(text, str) or not " ".join(text.split()):
+            return False, "chat refused: bad channel or empty text"
+        row = None
+        if channel.startswith("Private"):
+            # Its row in the game's channel drop-down, from the chat reader (several private chats look alike).
+            watcher = getattr(self, "_chat_watcher", None)
+            open_chats = watcher.channels() if watcher is not None else []
+            row = next((c["row"] for c in open_chats if c["channel"] == channel), None)
+            if row is None:
+                return False, "chat refused: that private chat is not open in the game"
+        elif channel not in CHANNELS:
+            return False, "chat refused: unknown channel"
+        sends = getattr(self, "_chat_sends", None)
+        if sends is None:
+            sends = self._chat_sends = collections.deque(maxlen=8)
+        self._chat_seq = getattr(self, "_chat_seq", 0) + 1
+        entry = {"id": self._chat_seq, "t": time.time(), "channel": channel, "text": " ".join(text.split())[:MAX_LEN],
+                 "state": "queued", "detail": "", "row": row}
+        sends.append(entry)
+        bot = self.bot
+        if bot is not None and bot.running:
+            bot.queue_chat(entry)
+            return True, f"chat queued for {channel}"
+        pids = location.game_pids()
+        world = getattr(getattr(self, "_last_snapshot", None), "world", None)
+        if len(pids) != 1 or world is None:
+            entry.update(state="failed", detail="game not running")
+            return False, "chat refused: game not running"
+        if world.dead or world.in_battle is True or not (world.travelling or world.zone in ("planet", "orbit")):
+            entry.update(state="failed", detail="not now (in a fight, dead, or not on a planet / in orbit)")
+            return False, "chat refused: not a calm moment"
+
+        def send():
+            from ..input.background import BackgroundInput
+            entry["state"] = "typing"
+            try:
+                ChatSender(BackgroundInput(pids[0])).send(channel, entry["text"], row)
+                entry.update(state="typed", typed_at=time.time())
+            except Exception as error:
+                entry.update(state="failed", detail=str(error)[:200])
+        threading.Thread(target=send, name="chat-send", daemon=True).start()
+        return True, f"chat sending to {channel}"
+
+    def _remote_chat_sends(self, lines):
+        """The last sent messages and their state; a typed one is "sent" once it shows in the chat lines."""
+        out = []
+        for entry in getattr(self, "_chat_sends", ()):
+            if entry["state"] == "typed":
+                kind = "Private" if entry["channel"].startswith("Private") else entry["channel"]
+                if any(line["text"] == entry["text"] and line["channel"] == kind for line in lines):
+                    entry["state"] = "sent"
+                elif time.time() - entry["typed_at"] > 30:
+                    entry.update(state="unconfirmed", detail="typed, but not seen in the chat")
+            out.append({k: entry[k] for k in ("id", "t", "channel", "text", "state", "detail")})
+        return out
 
     def _remote_learned_command(self, cmd, args):
         """A switch or a reset in the Learned report, written through the same store as the Learned tab."""

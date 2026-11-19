@@ -124,3 +124,7 @@ class BackgroundInput:
 
     def key(self, key, hold_s=0.06):
         self._as_active(f"key {key}", lambda: keyboard.post_key(self.canvas.hwnd, key, hold_s))
+
+    def type_text(self, text):
+        """Type text into the focused text box (the chat): WM_CHAR messages, any character."""
+        self._as_active("text", lambda: keyboard.post_text(self.canvas.hwnd, text))

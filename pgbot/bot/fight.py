@@ -55,6 +55,19 @@ class FightMixin:
             return False
         return True
 
+    def _resurrector_target(self, world, attackers, blaster):
+        """The nearest Resurrector that attacks the ship and can be shot now (in range, clickable, clear line of
+        fire), or None."""
+        weapon_range = blaster.range if blaster is not None and blaster.range else 3000.0
+        nav = self._nav(world)
+        now = time.monotonic()
+        found = [u for u in attackers
+                 if "resurrector" in (assets.display_name(u.desc or u.name) or "").lower()
+                 and SELECT_MIN_DIST <= u.distance <= weapon_range * 0.95
+                 and self.ignored.get(u.unit_id, 0) <= now
+                 and (nav is None or nav.fire_line_clear((world.x, world.y), (u.x, u.y)))]
+        return min(found, key=lambda u: u.distance) if found else None
+
     def _fight(self, world, enemies, blaster, attacks, buffs):
         """attacks and buffs are empty when energy is below the skills threshold; the blaster always fires."""
         # An enemy counts as attacking for a few seconds after it last aimed at the ship: Mantis switch their target
@@ -78,6 +91,19 @@ class FightMixin:
         if current is not None and current.distance < SELECT_MIN_DIST and any(
                 u.distance >= SELECT_MIN_DIST for u in attackers):
             current = None  # under the ship: a click there hits the own ship, which cannot be selected (see below)
+        # Resurrectors first, softly (user, 2026-11-19): one revives the others as they die. An L43 ship that should
+        # win 10 against 1 on Technatoria killed nothing in 73 s against a Death Squad and died. Only while it attacks
+        # and is in range with a clear line of fire; Resurrectors like to flee, and chasing one out of range would
+        # leave the others shooting. Otherwise the usual choice.
+        resurrector = self._resurrector_target(world, attackers, blaster)
+        if resurrector is not None and (current is None or current.unit_id != resurrector.unit_id):
+            self._debug(f"targeting the Resurrector first ({resurrector.distance:.0f} away)")
+            current = resurrector
+            self.target_id = current.unit_id
+            self.target_failures = 0
+        elif resurrector is None and current is not None and len(attackers) > 1 \
+                and "resurrector" in (assets.display_name(current.desc or current.name) or "").lower():
+            current = None  # it fled out of range or behind a rock: the usual choice instead of chasing it
         if current is None:
             if attackers:
                 # Not one under the ship, nor one just set aside as unselectable: a Mantis Marauder 96 away was
@@ -105,7 +131,7 @@ class FightMixin:
             self.target_id = current.unit_id
             self.target_failures = 0
         selected = world.selected_target
-        if selected is not None and selected.unit_id != current.unit_id:
+        if selected is not None and selected.unit_id != current.unit_id and current is not resurrector:
             # In a crowd the right-click often lands on a neighbour ("Could not select Mantis Interceptor" three times
             # in 15 s, 10:48). If the game already has another enemy of this fight selected and it is in range, shoot
             # that one instead of fighting the selection (attackers first, then any enemy of the fight).
@@ -226,7 +252,7 @@ class FightMixin:
                                     f"({point[0]:.0f}, {point[1]:.0f})")
                         self._move_toward(world, *point, "a clear view of the target")
                 if self.target_failures >= 6:
-                    self._log("warning", f"Could not select {assets.display_name(current.desc)}; skipping it")
+                    self._log("info", f"Could not select {assets.display_name(current.desc)}; skipping it")
                     self.ignored[current.unit_id] = time.monotonic() + 30
                     self.target_id = None
             return
@@ -266,7 +292,7 @@ class FightMixin:
         if not attackers or not self._defense_needed(world, attackers):
             return False
         energy = world.energy or 0
-        ready = [b for b in self.defensive if b.ready and not b.is_active and energy >= (b.energy_cost or 0)
+        ready = [b for b in self.defensive if b.ready and not self._running(b) and energy >= (b.energy_cost or 0)
                  and time.monotonic() >= self.skill_paused.get(b.hotkey, 0.0)]
         return bool(ready) and self._skill(ready[0])
 
@@ -285,7 +311,7 @@ class FightMixin:
             hull = world.hitpoints / world.max_hitpoints if world.hitpoints is not None and world.max_hitpoints else 1.0
             foe_types = [etype_of(u) for u in self._enemy_units(world) if self._attacking(world, u)]
             for b in self.defensive:
-                if not b.ready or b.is_active:
+                if not b.ready or self._running(b):
                     continue
                 learned = self._learn(lambda l: l.defense_use(b.desc or b.name or "?", foe_types, hull,
                                                               l._duration(b)), area="skills")
@@ -299,12 +325,12 @@ class FightMixin:
                 scores = {id(s): self._learn(lambda l: l.skill_score(s.desc or s.name or "?")) for s in attacks}
                 # Untried skills first (they need samples), then by measured effect per energy.
                 ordered.sort(key=lambda s: (scores[id(s)] is not None, -(scores[id(s)] or 0.0)))
-            wanted += [skill for skill in ordered if skill.ready and target.distance <= (skill.range or 3000)
-                       and self._deploy_ok(world, skill, target) is not False]
+            wanted += [skill for skill in ordered if skill.ready and not self._running(skill)
+                       and target.distance <= (skill.range or 3000) and self._deploy_ok(world, skill, target) is not False]
             group = [etype_of(u) for u in self._enemy_units(world) if self._attacking(world, u)
                      or u.unit_id == target.unit_id]
             for skill in buffs:
-                if not skill.ready or skill.is_active:
+                if not skill.ready or self._running(skill):
                     continue
                 deploy = self._deploy_ok(world, skill, target)
                 if deploy is False:
@@ -317,9 +343,14 @@ class FightMixin:
                   and now >= self.skill_paused.get(skill.hotkey, 0.0)]
         if wanted:
             if now < self.gcd_until or now < self.cast_until:
+                self._fire_note(f"holding for {wanted[0].desc or wanted[0].hotkey} (cooldown)")
                 return False  # hold the blaster until the skill can go
             skill = wanted[0]
-            if self._skill(skill):
+            if not self._skill(skill):
+                self._fire_note(f"{skill.desc or skill.hotkey} wanted but not pressed (repair cast "
+                                f"{self.repair_cast}, active {skill.is_active}); blaster held")
+                return False
+            if True:  # pressed
                 self.last_skill_press = now
                 self._learn(lambda l: l.pressed(skill))
                 deploys = self._learn(lambda l: l.is_deploy(skill.desc or skill.name or "?"))
@@ -350,7 +381,18 @@ class FightMixin:
                 self.last_press = now
                 self._learn(lambda l: l.skill_pressed(blaster, target))
             return pressed
+        self._fire_note(f"blaster not fired: ready {getattr(blaster, 'ready', None)}, distance {target.distance:.0f} "
+                        f"/ range {getattr(blaster, 'range', None)}, hold {self.weapon_hold - now:.1f} s, cast "
+                        f"{self.cast_until - now:.1f} s")
         return False
+
+    def _fire_note(self, text):
+        """Why no key was pressed (2026-11-19 Technatoria: 3 min in a fight without a shot and nothing logged), at
+        most every 3 s."""
+        now = time.monotonic()
+        if now - getattr(self, "last_fire_note", 0.0) > 3.0:
+            self.last_fire_note = now
+            self._debug(f"fire: {text}")
 
     def _steady_spot(self, world, target, standoff, others, nav):
         """The firing spot for this target, kept while the target stays within FIRE_SPOT_KEEP of where it was when the

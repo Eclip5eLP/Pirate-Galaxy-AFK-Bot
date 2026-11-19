@@ -96,7 +96,7 @@ class DronesMixin:
             self.drones_paused_until = time.monotonic() + 8
             self._debug(f"drones: {reason} right after the zone change; retrying in 8 s")
             return
-        self._log("warning", f"Drones: {reason}; trying again in {self.drone_backoff / 60:.0f} min")
+        self._log("info", f"Drones: {reason}; trying again in {self.drone_backoff / 60:.0f} min")
         self.drones_paused_until = time.monotonic() + self.drone_backoff
         self.drone_backoff = min(self.drone_backoff * 2, DRONE_BACKOFF_MAX_S)
         self.drone_toggle_want.clear()

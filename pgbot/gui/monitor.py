@@ -11,6 +11,8 @@ from ..game.state import GameReader, World
 from ..mem.jvm import JVM, SnapshotFailed
 from ..mem.process import MemoryReadError, Process
 
+MONITOR_START_GRACE_S = 120  # read errors this soon after a game process appears are its start, not a loss
+
 
 
 BLUEPRINT_NAME = re.compile(r"blueprint '(.+?)'", re.I)
@@ -72,11 +74,18 @@ class Monitor:
                 self._publish(Snapshot(False, None))
                 self._stop.wait(2.0)
                 continue
+            first_seen = self.__dict__.setdefault("pid_seen", {}).setdefault(pids[0], time.monotonic())
             try:
                 with Process(pids[0]) as process:
                     self._watch(JVM(process))
             except (MemoryReadError, OSError) as error:
-                self.log("error", f"Lost connection to the game: {error}")
+                # Not an error when the game closed (a restart, a crash the bot handles) or is still starting: the
+                # client's memory is not readable for its first moments (2026-11-19: "Lost connection" after every
+                # start by the bot itself).
+                if pids[0] not in location.game_pids():
+                    self.log("info", "The game closed")
+                elif time.monotonic() - first_seen > MONITOR_START_GRACE_S:
+                    self.log("error", f"Lost connection to the game: {error}")
                 self._publish(Snapshot(False, None))
                 self._stop.wait(2.0)
 

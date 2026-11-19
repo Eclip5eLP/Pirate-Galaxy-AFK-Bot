@@ -17,6 +17,7 @@ UI_CHECKS = {
     "maintenance_tabs": lambda w, h: (w - 700, 20, w - 150, 75),  # wide: some hangars have a CONQUEST tab in front
     "repair_buttons": lambda w, h: (w // 2 - 170, h // 2 + 15, w // 2 + 170, h // 2 + 80),
     "gate_tab": lambda w, h: (w - 560, 25, w - 400, 75),
+    "travel_hyperjump": lambda w, h: (w - 160, 380, w, 425),  # the travel panel's Hyperjump button
     "gate_jump": lambda w, h: (w - 140, 385, w - 20, 435),
     "drone_setup_title": lambda w, h: (w // 2 - 170, h // 2 - 215, w // 2 + 170, h // 2 - 160),
     "drone_charge_button": lambda w, h: (w // 2 + 170, h // 2 + 110, w // 2 + 300, h // 2 + 165),
@@ -65,6 +66,7 @@ SELECT_GIVE_UP_S = 6  # a pickup that stays unselectable this long is set aside 
 STARMAP_SCROLLBAR = ("right", -262, "top", 120)  # top of the destination list's scrollbar thumb
 STARMAP_SCROLL_STEP = 150  # pixels the thumb is dragged per page
 STARMAP_MAX_PAGES = 6
+STARMAP_FIRST_TRIES = 4  # the first destination row is clicked this often before the list counts as not open
 STARMAP_TRAVEL = ("right", -60, "top", 406)
 # Star gates (user demo 2026-11-12): each system has one gate orbit in its starmap ("DraconisGate"; in Gemini the
 # starbase is the gate). There Space opens the STARGATE tab: a list of the unlocked systems in progression order and
@@ -346,3 +348,11 @@ HULL_FULL_SHARE = 0.99  # hull counts as fully repaired from this share of the c
 READ_ERRORS_MAX = 30  # failed memory reads within a minute before the game counts as lost
 # PGBOT_LOG_DIR: checks write their logs elsewhere (they filled logs/ next to the real runs).
 LOG_DIR = pathlib.Path(os.environ.get("PGBOT_LOG_DIR") or pathlib.Path(__file__).resolve().parent.parent.parent / "logs")
+
+CHAT_WAIT_S = 300  # a chat message from the remote page waits this long for a calm moment (no fight) to be typed
+HYPERJUMP_BUTTON = ("right", -75, "top", 401)  # travel panel (Space), 1280 x 720 on the server 2026-11-19
+HYPERJUMP_MIN_LEFT_S = 25  # not worth the energy for the last seconds of a trip
+HYPERJUMP_SETTLE_S = 4  # the travel panel fades in after the trip starts
+WATCHDOG_S = 30  # bot loop without a finished tick this long: thread stacks to the log
+STUCK_ACTIVE_S = 20  # a skill flagged active this long (and longer than its effect) has a stuck flag
+BP_REUSE_S = 45 * 60  # blueprint progress saved this recently is used after a restart (no hangar trip)

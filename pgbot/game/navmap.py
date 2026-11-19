@@ -20,6 +20,10 @@ PREFER_PX = 4               # cells within about 600 of a wall are open but cost
 NEAR_WALL_COST = 1.5        # extra cost per near-wall cell
 
 
+ROCK_PAD_PX = 3  # planets without terrain: rock outlines grown by this many collision pixels (150 units each)
+ROCK_HEIGHT = 3000.0  # planets without terrain: a blocked spot on the collision map counts as a rock this tall
+
+
 def planet_scale(prefix):
     """ScaleX / ScaleY / ScaleZ from the planet's <prefix>.cfg (landscape size and height range)."""
     data = assets.find_asset(f"{prefix}.cfg")
@@ -52,6 +56,13 @@ class NavMap:
         self.size = raw.shape[0]
         self.blocked_fine = raw > 127
         factor = self.size // GRID
+        # Planets without terrain (asteroid fields): the collision map is the rocks' outline at the flight level, a
+        # hard edge whose 3D rock reaches past it. Routes there ran along the outline and the ship scraped and stuck on
+        # the rock faces (Technatoria 2026-11-19). The outline is grown by ROCK_PAD_PX for planning there.
+        self.terrain = assets.find_asset(f"{prefix}.0.0.jp2") is not None
+        if not self.terrain:
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ROCK_PAD_PX * 2 + 1, ROCK_PAD_PX * 2 + 1))
+            self.blocked_fine = cv2.dilate(self.blocked_fine.astype(np.uint8), kernel) > 0
 
         def padded(px):
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (px * 2 + 1, px * 2 + 1))
@@ -117,7 +128,7 @@ class NavMap:
         The last `skip_end` units are not checked (the point itself sits on or near the ground). Ground clicks with
         terrain in between land on that terrain (2026-11-11: camera inside the tunnel wall, ship pressed into it)."""
         if self.heights is None:
-            return True
+            return self._sight_over_rocks(eye, point, margin, skip_end)
         (ex, ey, ez), (px, py, pz) = eye, point
         length = math.sqrt((px - ex) ** 2 + (py - ey) ** 2 + (pz - ez) ** 2)
         steps = max(2, int(length / 150))
@@ -127,6 +138,30 @@ class NavMap:
                 break
             x, h, z = ex + (px - ex) * t, ey + (py - ey) * t, ez + (pz - ez) * t
             if self.ground_height(x, z) > h - margin:
+                return False
+        return True
+
+    def _sight_over_rocks(self, eye, point, margin, skip_end):
+        """Planets without terrain (asteroid fields, UseTerrain=false: Technatoria is gemini5) have no heightmap, only
+        rocks. Their collision map stands in (user's choice, 2026-11-19): every spot the ship cannot fly through is a
+        rock ROCK_HEIGHT above the point's own height (the flight level). Before, every view counted as clear and
+        clicks landed on rocks in front of the camera. Rocks floating above the flight level are not seen."""
+        (ex, ey, ez), (px, py, pz) = eye, point
+        top = py + ROCK_HEIGHT
+        size = self.size
+        length = math.sqrt((px - ex) ** 2 + (py - ey) ** 2 + (pz - ez) ** 2)
+        steps = max(2, int(length / 150))
+        for i in range(1, steps):
+            t = i / steps
+            if length * (1 - t) < skip_end:
+                break
+            h = ey + (py - ey) * t
+            if h - margin > top:
+                continue
+            x, z = ex + (px - ex) * t, ez + (pz - ez) * t
+            fx = min(size - 1, max(0, int((x + assets.MAP_OFFSET) / assets.MAP_SPAN * size)))
+            fy = min(size - 1, max(0, int((z + assets.MAP_OFFSET) / assets.MAP_SPAN * size)))
+            if self.blocked_fine[fy, fx]:
                 return False
         return True
 

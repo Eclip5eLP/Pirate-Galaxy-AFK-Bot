@@ -7,11 +7,16 @@ time, the nearest one first among equals, so it sweeps the area instead of circl
 import math
 import random
 
+from ..game import assets
+
 BLOCK_CELLS = 4        # block size in planning cells (600 units each): 2,400 world units
 MIN_BLOCK_CELLS = 4    # ignore slivers of open ground smaller than this
 SEEN_RADIUS = 2500     # a block counts as seen when the ship comes this close to its target point
 WANDER_FORGET_S = 600  # wander: a block seen longer ago than this counts as new again
 WANDER_NEAR, WANDER_FAR = 6000, 20000  # wander: next targets this far away
+EDGE_MARGIN = 9000     # no patrol points this close to the map edge (Technatoria's landing pocket lies in a corner: the
+                       # patrol hugged the border wall and stuck on it, 2026-11-19; open ground this close to the edge
+                       # is 0-5 % of a map)
 
 
 class Patrol:
@@ -32,7 +37,10 @@ class Patrol:
             my = sum(c[1] for c in cells) / len(cells)
             # The open cell nearest the block's middle, preferring cells with open neighbours (away from walls).
             best = min(cells, key=lambda c: (c[0] - mx) ** 2 + (c[1] - my) ** 2 - 4 * _open_neighbours(nav, c))
-            self.targets[block] = nav.to_world(best)
+            tx, ty = nav.to_world(best)
+            if max(abs(tx), abs(ty)) > assets.MAP_OFFSET - EDGE_MARGIN:
+                continue
+            self.targets[block] = (tx, ty)
         self.seen = {block: 0.0 for block in self.targets}
         self.current = None
         self.heading = None  # wander: direction of travel, kept from target to target

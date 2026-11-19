@@ -152,6 +152,9 @@ class Config:
     refill_on_land: bool = _setting(True, "Refill to full on landing", "Energy",
                                     hint="After every landing (also after a rescue), if an energy field is near the "
                                          "landing spot, fill energy to 100% before farming.")
+    hyperjump: bool = _setting(True, "Hyperjump while travelling", "Energy",
+                               hint="Skip planet-to-planet flights with the travel panel's Hyperjump button when the "
+                                    "jump leaves energy at or above 'Refill below energy'.")
     use_site_energy_fields: bool = _setting(True, "Use energy fields from the site data", "Energy",
                                             hint="Also fly to energy fields listed on the Hitchhiker's Guide maps.")
     # Loot.

@@ -25,6 +25,7 @@ from ..input.background import BackgroundInput, GameWindowGone
 from ..input.vdesktop import VirtualDesktops
 from ..mem.jvm import JVM, SnapshotFailed
 from ..mem.process import MemoryReadError, Process
+from .chatsend import ChatSender
 from .config import Config
 from .orbs import OrbMemory
 from .squadtrack import SquadTracks
@@ -145,10 +146,14 @@ class Bot(
         self._events = queue.Queue()
         self._stop = threading.Event()
         self._thread = None
+        self.tick_at = None  # watchdog: last loop tick or bot-thread log line
         self._guard_thread = None
         self.last_zone = None
         # Kept for the bot's lifetime (not reset per run). These used to be created on first use.
         self.input = None  # BackgroundInput while a game runs
+        self.chat_queue = []  # chat messages from the remote page (entries kept by the GUI), sent at a calm moment
+        self.travel_seen = None  # (monotonic time the trip was first seen, trip seconds) while travelling
+        self.hyperjump_tries, self.hyperjump_next = 0, 0.0  # at most two hyperjump tries per trip
         self.patrol_centre = None  # (x, y) the patrol circles around on the current planet; None until landed
         self.start_destination = None
         self.read_errors = []  # times of recent memory read errors
@@ -215,6 +220,8 @@ class Bot(
         self.status = "Starting"
         self._thread = threading.Thread(target=self._run, name="bot", daemon=True)
         self._thread.start()
+        self.tick_at = None  # set by the loop's first tick (starting the game takes longer than WATCHDOG_S)
+        threading.Thread(target=self._watchdog, name="bot-watchdog", daemon=True).start()
 
     def stop(self):
         self._stop.set()
@@ -261,6 +268,10 @@ class Bot(
 
     def _debug(self, text):
         """Detailed run log for analysis (logs/ is gitignored)."""
+        if self.tick_at is not None and threading.current_thread() is self._thread:
+            # A long step that keeps acting (the starmap search for the gate clicks row after row: 34 s, 15:03:16)
+            # is not stuck; only a loop that neither ticks nor logs is.
+            self.tick_at = time.monotonic()
         try:
             if self._debug_file is None:
                 LOG_DIR.mkdir(exist_ok=True)
@@ -276,6 +287,32 @@ class Bot(
 
     # Thread -------------------------------------------------------------------------------------------------
 
+    def _watchdog(self):
+        """Log every thread's stack when the bot loop has neither finished a tick nor logged anything for WATCHDOG_S (2026-11-19: the loop
+        hung twice on Technatoria right after a select click in a fight, 13:57 and 14:24; under Wine the threads
+        show nothing). Only logs; once per hang."""
+        import sys
+        dumped = False
+        while not self._stop.is_set():
+            self._stop.wait(5.0)
+            if self.tick_at is None or self.paused:
+                dumped = False
+                continue
+            stuck = time.monotonic() - self.tick_at
+            if stuck < WATCHDOG_S:
+                dumped = False
+                continue
+            if dumped:
+                continue
+            dumped = True
+            names = {t.ident: t.name for t in threading.enumerate()}
+            lines = [f"watchdog: no loop tick for {stuck:.0f} s; thread stacks:"]
+            for ident, frame in sys._current_frames().items():
+                lines.append(f"--- thread {names.get(ident, ident)}")
+                lines += [l.rstrip() for l in traceback.format_stack(frame)[-12:]]
+            self._log("error", "Bot loop stuck (stacks in the debug log)")
+            self._debug(chr(10).join(lines))
+
     def _run(self):
         restarts = []
         if not awake.keep_display_on():  # the game freezes when Windows turns the display off (pgbot/input/awake.py)
@@ -290,7 +327,8 @@ class Bot(
                     self._run_game(pid)
                     return
                 except (MemoryReadError, OSError) as error:
-                    self._log("error", f"Lost the game: {error}")
+                    if pid in location.game_pids():  # gone: "The game closed; starting it again" below says it
+                        self._log("error", f"Lost the game: {error}")
                 if not (self.config.start_game and self.config.restart_after_crash) or self._stop.is_set():
                     return
                 # The client crashes by itself after hours (2026-11-14 18:19, Direct3D 9): start it again.
@@ -338,6 +376,10 @@ class Bot(
             self.orbs = OrbMemory()
             # Its own read-only handle: the bot's reads must never share state with the background thread.
             self.blueprints = BlueprintBook(Process(self.pid), log=self._debug, owns_process=True)
+            # A new book for each game run, so it must be started again: after the game crash of 2026-11-19 04:21 the
+            # flag was still set from the first run, the new book never started, the catalogue never came and BP
+            # Completion waited in the hangar until the watchdog paused the bot (04:31).
+            self.blueprints_started = False
             if self._guard_thread is None or not self._guard_thread.is_alive():
                 self._guard_thread = threading.Thread(target=self._guard, name="window-guard", daemon=True)
                 self._guard_thread.start()
@@ -620,6 +662,7 @@ class Bot(
                 if len(self.recent_errors) >= 5:
                     self._log("error", "Paused: repeated errors")
                     self.paused = True
+            self.tick_at = time.monotonic()
             self._stop.wait(max(0.0, self.config.tick_s - (time.monotonic() - started)))
 
     # Reading ------------------------------------------------------------------------------------------------
@@ -654,6 +697,9 @@ class Bot(
 
     def _step(self, world):
         self._apply_hotkeys(world)
+        self._send_chats(world)
+        if not world.travelling:
+            self.travel_seen, self.hyperjump_tries, self.hyperjump_next = None, 0, 0.0
         self._start_blueprint_book(world)
         if world.zone != self.last_zone:
             if world.zone == "planet" and self.last_zone not in (None, "planet"):
@@ -676,6 +722,7 @@ class Bot(
             # The entry picked in the starmap; the current planet is still the origin while travelling.
             to = self.travel_to
             self.status = f"Travelling to {assets.display_name(to) if to else self._home_name()}"
+            self._hyperjump(world)
         elif not settled:
             self.status = "Waiting after zone change"
         elif self.stop_in_orbit and world.zone in ("orbit", "starmap"):
@@ -755,6 +802,36 @@ class Bot(
             else:
                 self.leaving = None
             self._farm(world)
+
+    def queue_chat(self, entry):
+        """A chat message from the remote page: sent by _send_chats at the next calm moment."""
+        self.chat_queue.append(entry)
+
+    def _send_chats(self, world):
+        """Type queued chat messages into the game's chat box (chatsend.py) when nothing else needs the keyboard:
+        not dead, not loading, not in a fight (letters are hotkeys outside the box), on a planet, in orbit or
+        travelling. A message that finds no such moment within CHAT_WAIT_S fails."""
+        if not self.chat_queue or self.input is None:
+            return
+        now = time.time()
+        entry = self.chat_queue[0]
+        calm = (not world.dead and world.in_battle is not True and time.monotonic() - self.last_fight_time > 5
+                and (world.travelling or world.zone in ("planet", "orbit"))
+                and time.monotonic() - self.zone_since >= self.config.settle_s)
+        if not calm:
+            if now - entry["t"] > CHAT_WAIT_S:
+                self.chat_queue.pop(0)
+                entry.update(state="failed", detail="no calm moment to type it")
+            return
+        self.chat_queue.pop(0)
+        entry["state"] = "typing"
+        try:
+            ChatSender(self.input, self._debug).send(entry["channel"], entry["text"], entry.get("row"))
+            entry.update(state="typed", typed_at=time.time())
+        except Exception as error:
+            entry.update(state="failed", detail=str(error)[:200])
+            self._log("warning", f"Chat message not sent: {error}")
+            self._snapshot("chat")
 
     def _check_progress(self, world):
         mark = (world.xp, world.cryonite, round((world.x or 0) / 500), round((world.y or 0) / 500), world.zone)

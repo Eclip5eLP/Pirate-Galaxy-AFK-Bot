@@ -63,6 +63,7 @@ class BlueprintBook:
         self.container_seen = None  # monotonic time the player's container was last read
         self.templates = {}  # template id -> {"desc": "$orbitalstrike.86", "needed": 14} (catalog(), BP Completion)
         self.seen = self._load_seen()  # display name -> parts found per the game's pickup messages
+        self.seen_changes = 0  # counts pickup message updates (BP Completion re-plans on a change)
         # The container is a copy the client fetched from the server: one each time the hangar CONFIGURATION panel
         # (class avw) is built, and older copies stay in memory (one from hours earlier was read all night, found
         # 2026-11-17). Which copy is newest cannot be told by reference, but counts only go up: every copy is read
@@ -168,6 +169,7 @@ class BlueprintBook:
             if match and self.seen.get(match.group(1)) != "known":
                 self.seen[match.group(1)], changed = "known", True
         if changed:
+            self.seen_changes += 1
             try:
                 SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
                 SEEN_FILE.write_text(json.dumps(self.seen, indent=1, sort_keys=True), encoding="utf-8")

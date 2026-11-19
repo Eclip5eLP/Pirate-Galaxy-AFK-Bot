@@ -20,6 +20,25 @@ class ActionsMixin:
         self._debug(f"key {key}")
         self.input.key(key)
 
+    def _running(self, item):
+        """True while a skill is really running. Some items report isActive while idle and ready, like the
+        blaster: the Mizar rocket on the level-35 hybrid did (2026-11-19, Technatoria). The fight wanted the rocket,
+        the press refused it as running, and the blaster was held for it: no shot for minutes. A flag that stays on
+        longer than the skill's effect could last (STUCK_ACTIVE_S at least) is taken as stuck and ignored."""
+        key = getattr(item, "desc", None) or getattr(item, "hotkey", None)
+        since = self.__dict__.setdefault("active_since", {})
+        if not item.is_active:
+            since.pop(key, None)
+            return False
+        started = since.setdefault(key, time.monotonic())
+        limit = max(STUCK_ACTIVE_S, (getattr(item, "active_time", 0.0) or 0.0) + 3.0)
+        if time.monotonic() - started < limit:
+            return True
+        if key not in self.__dict__.setdefault("stuck_noted", set()):
+            self.stuck_noted.add(key)
+            self._debug(f"{key}: shows as active for over {limit:.0f} s; taking the flag as stuck")
+        return False
+
     def _skill(self, item):
         """Press a skill key. After a press the skill is in its warm-up and does not show as cooling down yet;
         pressing again then cancels it (2026-11-11: the Atomic Repair Droid, 0.5 s warm-up, was pressed six times in
@@ -28,7 +47,7 @@ class ActionsMixin:
         # The blaster reports isActive permanently (seen live 2026-11-11: status 0, isActive True while idle), so the
         # "running" rule would block it completely; it only applies to the other skills.
         desc = getattr(item, "desc", None) or ""
-        if item.is_active and "blaster" not in desc:
+        if "blaster" not in desc and self._running(item):
             return False
         now = time.monotonic()
         if now < self.cast_until or self.repair_cast is not None:

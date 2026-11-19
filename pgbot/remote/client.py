@@ -23,7 +23,7 @@ MAP_RADIUS = 14000.0
 MAX_UNITS = 120
 LOG_KEEP = 500
 COMMANDS = {"start", "pause", "resume", "stop", "stop_in_orbit", "keep_going", "set_mode", "set_setting", "get_settings",
-            "set_learn_switch", "reset_learned"}
+            "set_learn_switch", "reset_learned", "send_chat"}
 LEARNED_S = 60.0  # the Learned report (learn/report.py) is rebuilt and, when changed, sent at most this often
 VIEW_COMMANDS = {"get_settings"}  # allowed in view-only mode
 
@@ -345,6 +345,10 @@ class RemoteClient:
                      "fly_planet": cfg.fly_planet, "farm_planet": cfg.farm_planet, "bp_system": cfg.bp_system,
                      "ship": cfg.ship},
             "bp": extras.get("bp"),
+            "chat": extras.get("chat") or [],
+            "chat_sent": extras.get("chat_sent") or [],
+            "chat_channels": extras.get("chat_channels") or [],
+            "travel": extras.get("travel"),
             "session": extras.get("session") or {},
             "connected": bool(snapshot is not None and snapshot.connected and snapshot.world is not None),
         }

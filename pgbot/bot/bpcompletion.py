@@ -35,8 +35,20 @@ class BPCompletionMixin:
         self.blueprints.request_catalog()
         # Always the current list first, from the nearest hangar (user, 2026-11-17): on a planet the normal routine
         # finishes and the ship takes off; in orbit F7, or the next orbit of the system with a hangar.
-        self.bp_hangar_wanted = True
+        # Except right after a restart (user, 2026-11-19: restarts wasted lots of time with hangar trips): progress
+        # saved by this system's run less than BP_REUSE_S ago is used instead.
+        saved = _load_state().get("bp_progress") or {}
+        age = time.time() - (saved.get("at") or 0)
         self.bp_hangar_target = None
+        if saved.get("system") == system and age < BP_REUSE_S and saved.get("found"):
+            for key, value in saved["found"].items():
+                template_id = int(key) if key.lstrip("-").isdigit() else key
+                self.blueprints.found[template_id] = max(self.blueprints.found.get(template_id) or 0, value)
+            self.bp["trusted"] = True
+            self.bp_hangar_wanted = False
+            self._log("info", f"Mode: BP Completion: {system} (progress from {age / 60:.0f} min ago; no hangar trip)")
+            return
+        self.bp_hangar_wanted = True
         self._log("info", f"Mode: BP Completion: {system} (reading the blueprint progress in the nearest hangar "
                           f"first)")
 
@@ -49,12 +61,21 @@ class BPCompletionMixin:
             self.status = "Reading the blueprint data"
             return
         now = time.monotonic()
-        if bp["planned"] is not None and bp["data_at"] == book.container_seen and now - bp["planned"] < BP_REPLAN_S:
+        # Also at once after a pickup message: the last part of the Fusion Power Repair Target (4/4) left the page at
+        # 3/4 and the plan on it for up to BP_REPLAN_S (user, 2026-11-19).
+        data = (book.container_seen, getattr(book, "seen_changes", 0))
+        if bp["planned"] is not None and bp["data_at"] == data and now - bp["planned"] < BP_REPLAN_S:
             return
-        bp["planned"], bp["data_at"] = now, book.container_seen
+        bp["planned"], bp["data_at"] = now, data
         resolved = bpplan.resolve(bp["system"], book.templates)
         book.track([i for _, i, _ in resolved if i is not None])
-        plan = bpplan.plan(bp["system"], book.templates, book.found_now())
+        found = book.found_now()
+        plan = bpplan.plan(bp["system"], book.templates, found)
+        if bp.get("trusted") or book.container_seen is not None:
+            # Kept for a restart (see _setup_bp); only counts read this run or restored, never an empty book.
+            bp["trusted"] = True
+            _save_state({"bp_progress": {"system": bp["system"], "at": time.time(),
+                                         "found": {str(k): v for k, v in found.items() if v}}})
         if plan["unknown"] and not bp["unknown_logged"]:
             bp["unknown_logged"] = True
             more = " ..." if len(plan["unknown"]) > 8 else ""
@@ -249,7 +270,7 @@ class BPCompletionMixin:
         if fresh and book.catalog_done.is_set():
             self._log("info", f"Blueprint progress read from the server's copy ({waited:.0f} s after the hangar)")
         elif waited > BP_FRESH_WAIT_S:
-            self._log("warning", f"No fresh blueprint progress {BP_FRESH_WAIT_S} s after the hangar; using the last "
+            self._log("info", f"No fresh blueprint progress {BP_FRESH_WAIT_S} s after the hangar; using the last "
                                  f"known counts and pickup messages")
         else:
             book.keep_scanning(4)

@@ -26,6 +26,9 @@ retreats when the hull gets low, rescues itself after being shot down, uses dron
 which fights, skills and drones work (see the **Learned** tab). It can start the game and log in by itself, and
 restart it after a crash.
 
+When travelling between planets it uses **Hyperjump** if the jump leaves energy at or above **Refill below energy**
+(setting **Hyperjump while travelling**, on by default). Asteroid-field planets without terrain are handled too.
+
 ## Requirements
 
 - Windows 10 or 11.
@@ -65,3 +68,8 @@ folder next to `run_gui.py`. Delete the folder to start fresh.
 The **Remote** tab can link the bot to a web page for watching and controlling it from a phone or another PC (sign in
 with a Penumbra account). Nothing is sent until you link it there, and the page can only control the bot after you
 turn on **Allow control**.
+
+The page shows the status, ship, travel destination and time left, a live minimap, the log, BP Completion progress,
+gains per hour and the **Learned** report. It has the in-game chat, newest line first. With control allowed it can
+start, pause and stop the bot (also in orbit), change the mode and settings, and send chat messages to Global,
+Alliance, Clan or an open private chat. The bot types them into the game's chat box when it is not fighting.

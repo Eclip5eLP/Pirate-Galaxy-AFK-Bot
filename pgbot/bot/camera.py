@@ -219,7 +219,10 @@ class CameraMixin:
         (ex, ey, ez), (tx, ty, tz) = camera.eye, camera.target
 
         def clear(eye):
-            return nav.ground_height(eye[0], eye[2]) < eye[1] - 150 and nav.sight_clear(eye, (tx, ty, tz))
+            # No heightmap for some planets (Technatoria, 2026-11-19 13:31: a TypeError every tick paused the bot):
+            # nothing to test the camera against, so the view counts as clear.
+            ground = nav.ground_height(eye[0], eye[2])
+            return (ground is None or ground < eye[1] - 150) and nav.sight_clear(eye, (tx, ty, tz))
         if clear((ex, ey, ez)):
             # In the open for a while: tilt back toward the angle it had (a steep view sees less ahead).
             self.camera_clear_since = self.camera_clear_since or now
@@ -270,7 +273,7 @@ class CameraMixin:
             # Still zoomed in well after landing and the last wheel turn changed nothing: the wheel does not reach
             # the game (worth a look). A slow but working zoom (542 -> 3,379 in 26 s) is no reason to warn.
             self._zoom_warned = self.zone_since
-            self._log("warning", f"Camera still zoomed in {ZOOM_WARN_AFTER_S} s after arriving (distance "
+            self._debug(f"Camera still zoomed in {ZOOM_WARN_AFTER_S} s after arriving (distance "
                                  f"{distance:.0f}); the wheel may not reach the game")
         self.last_terrain_zoom = now
         self._debug(f"{reason}: camera distance {distance:.0f}, zooming out")
