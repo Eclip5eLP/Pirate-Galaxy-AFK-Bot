@@ -79,8 +79,10 @@ class Config:
     use_skills: bool = _setting(True, "Use attack skills and buffs", "Combat",
                                 hint="Off: only blaster, collector and repair (those are always used).")
     ignore_names: str = _setting("Harvester", "Ignore enemies", "Combat",
-                                 hint="Comma separated; a name matches enemies containing all its words. Not "
-                                      "attacked unless they attack or a Seek mode wants them.")
+                                 hint="Comma separated; a name matches enemies containing all its words. In Park, "
+                                      "Park & Patrol and Wander they are never attacked unless they attack. The "
+                                      "other modes skip them unless they hunt them (e.g. Harvesters for an "
+                                      "Interceptor blueprint).")
     pull_carefully: bool = _setting(True, "Pull enemies one at a time", "Combat",
                                     hint="Prefer enemies with few others around them, so only one or two get "
                                          "aggroed at once.")

@@ -554,11 +554,18 @@ class ControlApp:
 
         def work():
             try:
-                myzen.update(lambda text: self._data_events.put(("progress", text)))
+                myzen.update(lambda text: self._data_events.put(("progress", text)), fallback=self._site_backup)
                 self._data_events.put(("done", None))
             except Exception as error:  # network or parse errors are shown, not raised
                 self._data_events.put(("error", f"{type(error).__name__}: {error}"))
         threading.Thread(target=work, name="site-data", daemon=True).start()
+
+    def _site_backup(self):
+        """The site data backup from the web page (fallback when the site is down); no sign-in needed. A relay moved
+        elsewhere (remote.json "relay_url") is used for it too."""
+        from ..remote import penumbra
+        relay = penumbra.Link().data.get("relay_url")
+        return myzen.fetch_backup(relay + "?a=sitedata" if relay else myzen.BACKUP_URL)
 
     def _poll_data(self):
         while True:
@@ -959,7 +966,14 @@ class ControlApp:
             if watcher is None and pid is not None:
                 watcher = chat.ChatWatcher(pid)
             self._chat_watcher = watcher
+            if self.bot is not None:
+                self.bot.chat_watcher = watcher  # the bot's chat sender reads the chat bar at its address
         watcher = getattr(self, "_chat_watcher", None)
+        error = getattr(watcher, "last_error", None) if watcher is not None else None
+        if error and error != getattr(self, "_chat_error_logged", None):
+            self._chat_error_logged = error
+            if self.bot is not None:
+                self.bot._debug(f"chat reader: {error}")
         return watcher.recent(60) if watcher is not None else []
 
     def _remote_extras(self):
@@ -974,7 +988,8 @@ class ControlApp:
             "chat": self._remote_chat(),
             "travel": getattr(self, "_travel_info", None),
             "chat_channels": [c["channel"] for c in (self._chat_watcher.channels()
-                                                       if getattr(self, "_chat_watcher", None) else [])],
+                                                       if getattr(self, "_chat_watcher", None) else [])
+                              if c["channel"] != "?"],
         }
         extras["chat_sent"] = self._remote_chat_sends(extras["chat"])
         if running:
@@ -1074,10 +1089,10 @@ class ControlApp:
         if not isinstance(channel, str) or not isinstance(text, str) or not " ".join(text.split()):
             return False, "chat refused: bad channel or empty text"
         row = None
+        # A private chat must be open in the game (chat reader); the sender finds and checks its entry in memory.
+        watcher = getattr(self, "_chat_watcher", None)
+        open_chats = watcher.channels() if watcher is not None else []
         if channel.startswith("Private"):
-            # Its row in the game's channel drop-down, from the chat reader (several private chats look alike).
-            watcher = getattr(self, "_chat_watcher", None)
-            open_chats = watcher.channels() if watcher is not None else []
             row = next((c["row"] for c in open_chats if c["channel"] == channel), None)
             if row is None:
                 return False, "chat refused: that private chat is not open in the game"
@@ -1088,7 +1103,7 @@ class ControlApp:
             sends = self._chat_sends = collections.deque(maxlen=8)
         self._chat_seq = getattr(self, "_chat_seq", 0) + 1
         entry = {"id": self._chat_seq, "t": time.time(), "channel": channel, "text": " ".join(text.split())[:MAX_LEN],
-                 "state": "queued", "detail": "", "row": row}
+                 "state": "queued", "detail": ""}
         sends.append(entry)
         bot = self.bot
         if bot is not None and bot.running:
@@ -1104,10 +1119,16 @@ class ControlApp:
             return False, "chat refused: not a calm moment"
 
         def send():
+            from ..game import chat
             from ..input.background import BackgroundInput
+            from ..mem.jvm import JVM
+            from ..mem.process import Process
             entry["state"] = "typing"
             try:
-                ChatSender(BackgroundInput(pids[0])).send(channel, entry["text"], row)
+                with Process(pids[0]) as process:
+                    jvm, address = JVM(process), getattr(watcher, "chat_address", None)
+                    ChatSender(BackgroundInput(pids[0]), lambda: chat.bar_state(jvm, address)).send(channel,
+                                                                                                   entry["text"])
                 entry.update(state="typed", typed_at=time.time())
             except Exception as error:
                 entry.update(state="failed", detail=str(error)[:200])

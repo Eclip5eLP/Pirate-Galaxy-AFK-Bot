@@ -12,6 +12,7 @@ Researched 2026-11-11 (docs/NOTES.md):
 Everything is downloaded once (Update in the settings tab) and cached in %LOCALAPPDATA%\\pgbot\\myzen.json.
 """
 import json
+import math
 import os
 import pathlib
 import re
@@ -28,7 +29,9 @@ BASE = "https://prelude-myzen.co.uk/"
 CACHE = pathlib.Path(os.environ.get("LOCALAPPDATA", ".")) / "pgbot" / "myzen.json"
 USER_AGENT = "Mozilla/5.0 (pgbot data fetch)"
 MAP_OFFSET, MAP_SPAN = 76800.0, 153600.0
-LEVEL = re.compile(r"^R(\d+)(?:\s*\W\s*(\d+))?\s+(.*)$")
+# "R25 Mender", "R40-R44 Mender", "R43,44Detonator", "R38,R39 Pyro", "R67�69Sniper" (the site's dash arrives as a
+# broken character; Mizar Magnet Sticky Bomb was hunted as an enemy named "R40�R44 Mender", 2026-11-20).
+LEVEL = re.compile(r"^R(\d+)(?:\s*[^\w\s]\s*R?(\d+))?\s*([A-Za-z].*)$")
 
 
 def normalize(name):
@@ -37,12 +40,12 @@ def normalize(name):
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def _get(path, attempts=4):
+def _get(path, attempts=4, timeout=60):
     """GET with retries: the site sometimes resets connections when asked many files in a row."""
     request = urllib.request.Request(BASE + path, headers={"User-Agent": USER_AGENT})
     for attempt in range(attempts):
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 return response.read()
         except urllib.error.HTTPError:
             raise  # a real answer (404 etc.), retrying will not help
@@ -333,6 +336,59 @@ def overlay_points(png_bytes):
             for (cx, cy), stat in zip(centres[1:], stats[1:]) if stat[cv2.CC_STAT_AREA] >= 20]
 
 
+def spot_labels(png_bytes, system=None):
+    """[[x, y, level or None]] world points of the enemy level labels drawn on an overlay (sitelevels.py). A level
+    that is surely a partial read becomes None: one digit among two-digit labels of the same image, or more than
+    LABEL_BELOW_RANGE under the planet's star system range (Terasa "8", Mars "7": the left digit was not read)."""
+    from . import sitelevels
+    found = sitelevels.labels(png_bytes)
+    image = cv2.imdecode(np.frombuffer(png_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
+    if not found or image is None:
+        return []
+    scale = MAP_SPAN / image.shape[1]
+    levels = sorted(l for *_, l in found if l is not None)
+    median = levels[len(levels) // 2] if levels else None
+    low = next((lo for name, lo, _ in SYSTEM_LEVELS if system and normalize(name) == normalize(system)), None)
+    out = []
+    for x, y, level in found:
+        if level is not None and level < 10 and median is not None and median >= 20:
+            level = None
+        if level is not None and low is not None and (level < low - LABEL_BELOW_RANGE or (level < 10 <= low)):
+            level = None  # one digit outside Vega: a two-digit label with its "1" not read (Terasa "18" -> "8")
+        out.append([round(x * scale - MAP_OFFSET), round(y * scale - MAP_OFFSET), level])
+    return out
+
+
+LABEL_BELOW_RANGE = 10
+
+
+def add_spot_labels(progress=lambda text: None):
+    """Add the level labels to a cache from before they were read (2026-11-20), without a full update: downloads
+    only the overlays. Returns the number of overlays read."""
+    data = load()
+    if not data:
+        return 0
+    done, count = set(), 0
+    for entry in data["planets"].values():
+        if entry["id"] in done:
+            continue
+        done.add(entry["id"])
+        for spot, info in entry.get("spots", {}).items():
+            if "labels" in info:
+                continue
+            progress(f"Levels: {entry['label']} {spot}")
+            try:
+                png = _get(f"PirateGalaxy/MantisSpots/{entry['id']}/{entry['id']}_{spot}.png")
+            except (OSError, urllib.error.HTTPError):
+                continue
+            info["labels"] = spot_labels(png, BLUEPRINT_SYSTEM.get(entry["id"], entry.get("system")))
+            count += 1
+            time.sleep(0.2)
+    CACHE.write_text(json.dumps(data), encoding="utf-8")
+    _loaded.clear()
+    return count
+
+
 # Download ------------------------------------------------------------------------------------------------------
 
 # Level ranges per star system (GalacticBlueprints/systems.json); Sol in unrest counts as Sol for power tiers.
@@ -340,10 +396,42 @@ SYSTEM_LEVELS = [("Vega", 0, 14), ("Antares", 15, 24), ("Gemini", 25, 32), ("Miz
                  ("Draconis", 60, 69), ("Sirius", 70, 81), ("Tau Ceti", 82, 99), ("Oort", 100, 999)]
 
 
-def update(progress=lambda text: None):
-    """Download everything, save the cache and return it. Raises OSError if the site cannot be reached."""
+def update(progress=lambda text: None, fallback=None):
+    """Download everything, save the cache and return it. If the site cannot be reached (or fails partway) and
+    fallback is given, the backup it returns (bytes of a saved myzen.json) is used instead (user, 2026-11-21: the
+    site was down). Raises OSError if neither works."""
+    try:
+        return _download(progress)
+    except (OSError, ValueError) as error:  # URLError and timeouts are OSErrors
+        if fallback is None:
+            raise
+        progress(f"Site not reachable ({type(error).__name__}); loading the backup")
+        try:
+            data = json.loads(fallback().decode("utf-8"))
+        except Exception as backup_error:
+            raise OSError(f"site: {error}; backup: {backup_error}") from None
+        if not isinstance(data, dict) or not data.get("blueprints") or not data.get("planets"):
+            raise OSError(f"site: {error}; backup: not site data") from None
+        data["source"] = "backup"
+        CACHE.parent.mkdir(parents=True, exist_ok=True)
+        CACHE.write_text(json.dumps(data), encoding="utf-8")
+        _loaded.clear()
+        return data
+
+
+BACKUP_URL = "https://eclip5e.com/development/pgbot/api.php?a=sitedata"  # open to all, no sign-in (user)
+
+
+def fetch_backup(url=BACKUP_URL, timeout=60):
+    """The site data backup from the bot's web page, as bytes."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return response.read()
+
+
+def _download(progress):
     data = {"fetched": time.strftime("%Y-%m-%d %H:%M"), "blueprints": [], "planets": {}}
-    index = _text(_get("BPList.html"))
+    index = _text(_get("BPList.html", attempts=2, timeout=20))  # a site that is down fails fast (fallback)
     types = parse_types(index)
     categories = sorted(set(re.findall(r"PirateGalaxy/BPList/([A-Za-z]+)\.html", index)))
     for number, category in enumerate(categories, 1):
@@ -375,7 +463,8 @@ def update(progress=lambda text: None):
                 png = _get(f"PirateGalaxy/MantisSpots/{site_id}/{site_id}_{spot}.png")
             except urllib.error.HTTPError:
                 continue
-            entry["spots"][spot] = {"centres": overlay_points(png), "cells": overlay_cells(png)}
+            entry["spots"][spot] = {"centres": overlay_points(png), "cells": overlay_cells(png),
+                                    "labels": spot_labels(png, BLUEPRINT_SYSTEM.get(site_id, system))}
             time.sleep(0.3)
         # "AX-03/BX-12/..." is one map shared by several planets.
         for part in name.split("/"):
@@ -393,10 +482,167 @@ def load():
     """The cached data, or None if it was never downloaded."""
     if "data" not in _loaded:
         try:
-            _loaded["data"] = json.loads(CACHE.read_text(encoding="utf-8"))
+            _loaded["data"] = _expand_areas(_repair_levels(json.loads(CACHE.read_text(encoding="utf-8"))))
         except (OSError, ValueError):
             _loaded["data"] = None
     return _loaded["data"]
+
+
+LEVEL_TOKEN = r"[Rr](\d+)(?:\s*[^\w\s\[\]()]\s*[Rr]?(\d+))?"
+LEVEL_INSIDE = re.compile(r"\s" + LEVEL_TOKEN + r"\s*[A-Za-z]")
+
+
+def split_enemies(text):
+    """[(name, (low, high) or None)] of one site enemy text that may hold several enemies run together, with bracket
+    notes: "Repogrub R89,90 Interceptor" -> Repogrub (no level), Interceptor 89-90; "Ignomes [DS Commander] R93
+    Abasis [DS Commander]" -> Ignomes, Abasis 93; "Signor [Comm.]" -> Signor (Sol drops, 2026-11-20)."""
+    text = re.sub(r"\[[^\]]*\]", " ", text)
+    # "(DS only)", "(at LZ only)", "(55/10)": notes; the enemy is hunted either way (a Death Squad Rocketeer is
+    # still a Rocketeer).
+    text = re.sub(r"\([^)]*\)", " ", text)
+    # "R7 Scout, 1)" / "Custodian Comm., 1) 2)": footnote marks the site leaves on 29 patterns.
+    text = re.sub(r"(\s*,?\s*\d+\s*\))+\s*$", "", text)
+    out, pending, last = [], None, 0
+    # A level token starts a new enemy; text between tokens is one enemy name.
+    for match in re.finditer(r"(?:^|(?<=\s))" + LEVEL_TOKEN + r"(?=\s|[A-Za-z]|$)", text):
+        name = " ".join(text[last:match.start()].split())
+        if name:
+            out.append((name, pending))
+        pending = (int(match.group(1)), int(match.group(2) or match.group(1)))
+        last = match.end()
+    name = " ".join(text[last:].split())
+    if name:
+        out.append((name, pending))
+    return out
+
+
+def _repair_levels(data):
+    """Enemy names that still carry their level ("R40�R44 Mender", parsed with the old LEVEL pattern): name
+    and levels split, as a fresh download would. The levels are set only if every enemy of the drop has them (a
+    "Mender" next to "R52-60 Sniper" keeps the drop open to any level)."""
+    for bp in (data or {}).get("blueprints", []):
+        enemies = bp.get("enemies") or []
+        if not any(LEVEL.match(e or "") or LEVEL_INSIDE.search(e or "") or re.search(r"[\[()]|^[Rr]\d", e or "")
+                   for e in enemies):
+            continue
+        names, lows, highs, all_levelled = [], [], [], True
+        for enemy in enemies:
+            for name, levels in split_enemies(enemy or ""):
+                names.append(name)
+                if levels:
+                    lows.append(levels[0])
+                    highs.append(levels[1])
+                else:
+                    all_levelled = False
+        bp["enemies"] = names
+        if bp.get("enemy_levels") is None and all_levelled and lows:
+            bp["enemy_levels"] = [min(lows), max(highs)]
+    return data
+
+
+def _split_known(text, vocabulary):
+    """Split an enemy text the site ran together ("Custodian Comm. Repogrub", "Rocketeer Rocket Turret") into known
+    enemy names, longest first; [text] if it does not split into known names completely."""
+    words, out, i = text.split(), [], 0
+    known = {normalize(v): v for v in vocabulary}
+    while i < len(words):
+        for j in range(len(words), i, -1):
+            name = " ".join(words[i:j])
+            if normalize(name) in known:
+                out.append(known[normalize(name)])
+                i = j
+                break
+        else:
+            return [text]
+    return out or [text]
+
+
+def _expand_areas(data):
+    """Drop locations that are no single planet, resolved to planets (user, 2026-11-21: "Sol Solo Shield" was
+    collected on Mars but never planned; the site gives its place as "Sol System"). 120+ rare blueprints were left
+    out of every system's plan this way:
+    - "Moon and Earth", "Baumar and Molikar": both planets;
+    - "Sol System", "Mizar System": the system's farm planets (planets with site drops) where the enemy is known to
+      appear (in another drop there or the planet's spawn overlays), else all of them. The site's level range is a
+      whole-system range, so such drops get no level filter;
+    - a misspelling such as "Klabesh": the planet with a near-identical name.
+    Bare system names ("Vega", "Oort": skull blueprints of XC Remnants) and the Sirius rings stay as they are.
+    The original text is kept as "area"."""
+    import difflib
+    if not data:
+        return data
+    planets = data.get("planets", {})
+    by_key = {normalize(v["id"]): v for v in planets.values()}
+    names = {}  # display name used in drops -> planet entry
+    for bp in data.get("blueprints", []):
+        for place in bp.get("planets", []):
+            info = planets.get(normalize(place)) or by_key.get(normalize(place))
+            if info and normalize(info["id"]) not in CONQUEST_ONLY:
+                names.setdefault(place, info)
+    # Enemy names the site ran together: "Marauder, Resurrector" (comma) is split at the comma; "Rocketeer Rocket
+    # Turret" with factions Mantis, Imperial into names of entries that have one faction per name, when that gives
+    # exactly one name per faction. Other run-together texts stay (a looser split broke "Custodian Comm." apart).
+    vocabulary = set()
+    for bp in data.get("blueprints", []):
+        enemies, factions = bp.get("enemies") or [], bp.get("factions") or []
+        if len(enemies) == len(factions):
+            vocabulary.update(e for e in enemies if "," not in e)
+    for bp in data.get("blueprints", []):
+        enemies = [part.strip() for e in bp.get("enemies") or [] for part in e.split(",") if part.strip()]
+        factions = bp.get("factions") or []
+        if len(enemies) < len(factions):
+            split = [n for e in enemies for n in _split_known(e, vocabulary - set(enemies))]
+            if len(split) == len(factions):
+                enemies = split
+        if enemies:
+            bp["enemies"] = enemies
+    # Enemies seen per planet (drop lists).
+    on_planet = {}
+    for bp in data.get("blueprints", []):
+        for place in bp.get("planets", []):
+            if place in names:
+                on_planet.setdefault(place, set()).update(normalize(e) for e in bp.get("enemies") or [])
+
+    def appears(enemy, place):
+        if normalize(enemy) in on_planet.get(place, set()):
+            return True
+        spots = names[place].get("spots") or {}
+        return any(normalize(enemy).endswith(normalize(spot)) or normalize(spot).endswith(normalize(enemy))
+                   for spot in spots)
+
+    for bp in data.get("blueprints", []):
+        places = bp.get("planets") or []
+        if not bp.get("enemies") or all(p in names for p in places):
+            continue
+        resolved, system_wide = [], None
+        for place in places:
+            if place in names:
+                resolved.append(place)
+                continue
+            parts = [x.strip() for x in re.split(r"\s+and\s+", place) if x.strip()]
+            if len(parts) > 1 and all(x in names for x in parts):
+                resolved += parts
+                continue
+            match = re.fullmatch(r"(.+?)\s+System", place.strip())
+            if match:
+                system = match.group(1)
+                # Blueprint system, not travel system: Earth in unrest is Tau Ceti's (BLUEPRINT_SYSTEM).
+                farm = [n for n, info in names.items()
+                        if normalize(BLUEPRINT_SYSTEM.get(info["id"], info["system"])) == normalize(system)]
+                if farm:
+                    system_wide = system
+                    fits = [n for n in farm if any(appears(e, n) for e in bp["enemies"])]
+                    resolved += fits or farm
+                    continue
+            close = difflib.get_close_matches(place, list(names), n=1, cutoff=0.85)
+            if close:
+                resolved.append(close[0])
+        if resolved:
+            bp["area"] = places
+            bp["planets"] = list(dict.fromkeys(resolved))
+            if system_wide:
+                bp["enemy_levels"] = None
+    return data
 
 
 # Lookups -------------------------------------------------------------------------------------------------------
@@ -442,8 +688,31 @@ def planet_info(display_name):
 
 
 def planet_system(display_name):
+    """The star system a planet is reached in (travel: gates, orbits). Earth in unrest is Sol's (Earth's orbit)."""
     info = planet_info(display_name)
     return info.get("system") if info else None
+
+
+# Zones that share another system's orbit but belong to a later system for blueprints and enemy levels (user,
+# 2026-11-20): Earth in unrest is reached through Earth's orbit in Sol, but it is a Tau Ceti zone (enemies R89-93,
+# the site lists it under Sol only because of the shared place). Site id -> system.
+BLUEPRINT_SYSTEM = {"AEarth": "Tau Ceti"}
+# Conquest-only planets (user, 2026-11-21): no landing for farming, never part of a blueprint plan.
+CONQUEST_ONLY = {"colossus", "dante"}
+
+
+def farmable(display_name):
+    """A planet the bot may farm on (known to the site data and not conquest-only)."""
+    info = planet_info(display_name)
+    return bool(info) and normalize(info["id"]) not in CONQUEST_ONLY
+
+
+def planet_bp_system(display_name):
+    """The star system a planet's blueprints count for (BP Completion): planet_system, except the zones above."""
+    info = planet_info(display_name)
+    if not info:
+        return None
+    return BLUEPRINT_SYSTEM.get(info.get("id"), info.get("system"))
 
 
 def tier(level):
@@ -467,17 +736,123 @@ def spot_id(full_name):
     return prefix + "".join(w[:1].upper() + w[1:] for w in words[1:])
 
 
-def enemy_areas(display_name, full_names):
-    """Centres of the spawn areas of these enemies on a planet, from the site overlays."""
+def enemy_areas(display_name, full_names, levels=None):
+    """Spawn areas of these enemies on a planet, from the site overlays. With levels (low, high) and level labels
+    read from the overlay: the labelled spawn points at those levels plus the unread ones (None); an overlay
+    without labels gives its area centres."""
     info = planet_info(display_name)
     if not info:
         return []
     points = []
+    spots = info.get("spots", {})
     for name in full_names:
-        spot = info.get("spots", {}).get(spot_id(name))
-        if spot:
-            points.extend(tuple(p) for p in spot["centres"])
+        spot = spots.get(spot_id(name))
+        if spot is None and is_squad_leader(name):
+            # The site has no spot list for Death Squad leaders; its Death Squad overlay is where they fly (user,
+            # 2026-11-20: Antares' Custodian Commanders are single units, but the site's "DS" is them).
+            spot = spots.get("DeathSquad")
+        if not spot:
+            continue
+        labels = spot.get("labels") or []
+        if levels and labels:
+            # The site writes each spawn's level next to its icon (user, 2026-11-20): Lustra's R25 Custodian
+            # Commander is the south-east one, the other five are R23.
+            found = [(x, y) for x, y, level in labels if level is None or levels[0] <= level <= levels[1]]
+        else:
+            found = [tuple(p) for p in spot["centres"]]
+        points.extend(p for p in found if p not in points)
     return points
+
+
+SPAWN_OWN_LABEL = 6000     # an area centre with its enemy's level label this close is that labelled spawn
+SPAWN_NEAR_LABEL = 10000   # an unlabelled spawn takes the level of the nearest label of any enemy this close
+FOCUS_RADIUS = 25000       # spawn values within this distance add up (the bot fights whatever it meets around)
+FOCUS_SHARE = 0.4          # areas worth at least this share of the best are patrolled
+
+
+def _overlay(spots, name):
+    spot = spots.get(spot_id(name))
+    if spot is None and is_squad_leader(name):
+        spot = spots.get("DeathSquad")
+    return spot
+
+
+def enemy_spawns(display_name, full_name):
+    """[(x, y, level or None)] spawn points of an enemy on a planet: its labelled spawns, plus area centres without a
+    label of their own. A spawn without a level takes the nearest label of any enemy around: spawns in one place
+    share their level (Mars: the R50 corner in the north-east holds Pyros, Assassins, Resurrectors, an Imperial
+    Sniper and the Menders' area, whose overlay has no labels; user, 2026-11-21)."""
+    info = planet_info(display_name)
+    spot = _overlay(info.get("spots", {}), full_name) if info else None
+    if not spot:
+        return []
+    labels = [tuple(p) for p in spot.get("labels") or []]
+    points = list(labels)
+    for cx, cy in spot.get("centres") or []:
+        if not any(math.hypot(cx - x, cy - y) <= SPAWN_OWN_LABEL for x, y, _ in labels):
+            points.append((cx, cy, None))
+    every = [(x, y, level) for other in info["spots"].values() for x, y, level in other.get("labels") or []
+             if level is not None]
+    out = []
+    for x, y, level in points:
+        if level is None:
+            # The level most labels around show, the nearest one on a tie: Mars' Mender area in the north-east has
+            # a Transporter R45 label closest, but the Imperial Sniper and the Resurrector beside it are R50.
+            near = sorted((math.hypot(px - x, py - y), lv) for px, py, lv in every)
+            near = [lv for d, lv in near if d <= SPAWN_NEAR_LABEL]
+            if near:
+                level = max(dict.fromkeys(near), key=near.count)
+        out.append((round(x), round(y), level))
+    return out
+
+
+def spawn_values(display_name, wants):
+    """[(x, y, value)] spawn points of the sought enemies, valued by the blueprints they can drop: each blueprint
+    adds 1 / (its number of spawns) to every spawn of its enemies at its levels (unknown level: counted). A
+    blueprint that only few spawns drop weighs on those; one that every spawn drops weighs little anywhere.
+    Returns [] when no blueprint is bound to some spawns only (the level filter leaves every spawn in)."""
+    names = sorted({n for item in wants for n in item["names"]})
+    spawns = {name: enemy_spawns(display_name, name) for name in names}
+    values, bound = {}, False
+    for item in wants:
+        points = [(x, y) for name in item["names"] for x, y, level in spawns[name]
+                  if item["levels"] is None or level is None or item["levels"][0] <= level <= item["levels"][1]]
+        every = sum(len(spawns[name]) for name in item["names"])
+        if not points:
+            continue
+        if len(points) < every:
+            bound = True
+        for point in points:
+            values[point] = values.get(point, 0.0) + 1.0 / len(points)
+    return [(x, y, v) for (x, y), v in values.items()] if bound else []
+
+
+def focus_areas(display_name, wants, areas):
+    """The patrol areas near the most valuable spawns (spawn_values summed within FOCUS_RADIUS): those worth at least
+    FOCUS_SHARE of the best. None when nothing to focus on. Mars, 2026-11-21: four of ten blueprints drop only in
+    the R50 north-east; the patrol over all 34 areas met no R50 Custodian Commander in 10 h."""
+    values = spawn_values(display_name, wants)
+    if not values or not areas:
+        return None
+
+    def worth(ax, ay):
+        return sum(v for x, y, v in values if math.hypot(x - ax, y - ay) <= FOCUS_RADIUS)
+    scored = [(a, worth(*a)) for a in areas]
+    best = max(w for _, w in scored)
+    if best <= 0:
+        return None
+    focused = [a for a, w in scored if w >= FOCUS_SHARE * best]
+    # Valuable spawns with no area of their own nearby are patrol points too: Mars' second R50 Custodian Commander
+    # (53378, -48395) has a level label but no area centre, so the patrol never went there (2026-11-21).
+    for x, y, _ in values:
+        if all(math.hypot(x - ax, y - ay) > SPAWN_OWN_LABEL for ax, ay in focused) and worth(x, y) >= FOCUS_SHARE * best:
+            focused.append((x, y))
+    return focused
+
+
+def is_squad_leader(name):
+    """A Death Squad leader by name (the Custodians; see bot/danger.py)."""
+    return "custodian" in (name or "").lower()
 
 
 def death_squad_cells(display_name):
@@ -491,6 +866,28 @@ def _words(text):
     return re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", text or "").lower())
 
 
+# Units that appear only when their spawner is attacked (user, 2026-11-19): Harvesters put down Interceptors, Mantis
+# Menders and Imperial Repair Nodes Attack Drones. A blueprint that drops from them is farmed by attacking the spawner.
+# (spawned unit, spawner, faction or None for any)
+SPAWNED_BY = [("interceptor", "Harvester", None), ("attack drone", "Repair Node", "imperial"),
+              ("attack drone", "Mender", "mantis")]
+
+
+def spawners(names, known=None):
+    """Spawner names for spawned units among `names` ("Mantis Interceptor" -> "Mantis Harvester", "Imperial Attack
+    Drone" -> "Imperial Repair Node"). With `known` (the game's enemy names, normalized), a spawner the game does not
+    have is left out."""
+    out = []
+    for name in names:
+        low = name.lower()
+        for spawned, spawner, faction in SPAWNED_BY:
+            if spawned in low and (faction is None or low.startswith(faction)):
+                candidate = re.sub(spawned, spawner, name, flags=re.I).strip()
+                if (known is None or normalize(candidate) in known) and candidate not in out:
+                    out.append(candidate)
+    return out
+
+
 def enemy_matches(unit_name, level, wanted_names, levels=None, exact=True):
     """True if an in-game enemy name is one of the wanted full names and the level fits.
     exact=False also accepts names that contain all words of a wanted name (site names the game lacks)."""
@@ -500,7 +897,20 @@ def enemy_matches(unit_name, level, wanted_names, levels=None, exact=True):
         return False
     name = _words(unit_name)
     for wanted in wanted_names:
-        parts = _words(wanted)
-        if parts == name or (not exact and parts and all(part in name for part in parts)):
+        parts = _wanted_words(wanted)
+        if len(parts) == len(name) and all(_word_fits(part, word) for part, word in zip(parts, name)):
+            return True
+        if not exact and parts and all(any(_word_fits(part, word) for word in name) for part in parts):
             return True
     return False
+
+
+def _wanted_words(text):
+    """Words of a site enemy name; a word cut short with a dot stays marked ("Custodian Comm." -> custodian, comm.)."""
+    return re.findall(r"[a-z0-9]+\.?", unicodedata.normalize("NFKD", text or "").lower())
+
+
+def _word_fits(part, word):
+    # The site shortens names ("Custodian Comm." = the game's "Custodian Commander", 2026-11-20): a cut word matches
+    # the words it starts.
+    return word.startswith(part[:-1]) if part.endswith(".") else word == part

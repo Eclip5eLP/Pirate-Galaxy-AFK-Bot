@@ -12,12 +12,51 @@ from .util import _point_along, _segment_distance
 
 
 class FightMixin:
+    def _off_focus(self, unit):
+        """Far from every focused patrol area (farm._seek_areas). Sought enemies there are not hunted, only fought
+        when they attack: Mars, 2026-11-21 14:09-14:18, the way to the R50 north-east crosses the R45 Rocketeers,
+        Paralyzors and Marauders, which the Sol blueprints take at any level, and the bot stayed fighting them."""
+        focus = getattr(self, "seek_focus", None)
+        return bool(focus) and all(math.hypot(unit.x - x, unit.y - y) > FOCUS_FIGHT_RADIUS for x, y in focus)
+
     def _seek_match(self, unit):
-        if self.seek is None:
+        if self.seek is None or self._off_focus(unit):
             return False
         name = assets.display_name(unit.desc or unit.name)
-        return myzen.enemy_matches(name, unit.level, self.seek["names"], self.seek["levels"],
-                                   exact=self.seek.get("exact", True))
+        if self._seek_name_match(name, unit.level):
+            return True
+        # The spawner of a sought spawned unit (Harvester for Interceptors, Mender for Attack Drones): the sought ones
+        # only appear once it is attacked. At the sought levels: the spawned units come at their spawner's level (a
+        # Harvester L29 put down Interceptors L29 on Prosperous while the blueprint needs L27, 2026-11-19).
+        return bool(self.seek.get("spawners")) and myzen.enemy_matches(name, unit.level, self.seek["spawners"],
+                                                                       self.seek["levels"])
+
+    def _seek_etype(self, etype):
+        """A learned enemy type key ("Mantis Paralyzor|33") is sought (name and level, or a spawner)."""
+        if self.seek is None:
+            return False
+        name, _, level = etype.rpartition("|")
+        level = int(level) if level.isdigit() else None
+        return self._seek_name_match(name, level) or (bool(self.seek.get("spawners")) and myzen.enemy_matches(
+            name, level, self.seek["spawners"], self.seek["levels"]))
+
+    def _seek_name_match(self, name, level):
+        """A sought name at a level one of its own blueprints drops at (seek["name_levels"]; the plan's whole range
+        when not given). Mars, 2026-11-21: with one range R45-50 for all, the bot fought ~150 R45-49 Menders in a
+        night for two blueprints that only R50 Menders drop."""
+        per = self.seek.get("name_levels")
+        exact = self.seek.get("exact", True)
+        if not per:
+            return myzen.enemy_matches(name, level, self.seek["names"], self.seek["levels"], exact=exact)
+        return any(myzen.enemy_matches(name, level, [wanted], per.get(wanted, self.seek["levels"]), exact=exact)
+                   for wanted in self.seek["names"])
+
+    def _ignored(self, unit):
+        """On the ignore list. The list holds only in Park, Park & Patrol and Wander; the other modes skip a listed
+        enemy unless they hunt it (e.g. a Harvester for an Interceptor blueprint) (user, 2026-11-19)."""
+        if not self._name_in_list(unit, self.config.ignore_names):
+            return False
+        return self.config.mode in IGNORE_LIST_MODES or not self._seek_match(unit)
 
     def _wanted(self, unit, attacking):
         """Should this enemy be fought in the current mode?"""
@@ -31,16 +70,17 @@ class FightMixin:
             return True
         if self._listed_avoid(unit):
             return False  # on the danger list: no fight is started on it (it is fought when it attacks)
+        if self.seek is not None and self._seek_match(unit):
+            return True  # also a Harvester in lower level mode when its Interceptors are sought
         if self.caution == "lower" and any(w in (unit.desc or unit.name or "").lower() for w in LOWER_SKIP_NAMES):
             return False
-        if self.seek is not None and self._seek_match(unit):
-            return True
-        if self._name_in_list(unit, cfg.ignore_names):
+        if self._ignored(unit):
             return False
         aggressive = self._aggressive(unit)
         # Aggressive enemies near enough to come for the ship are fought in every mode; seek modes reach a bit
         # further, so the area around the sought enemies gets cleared (user, Mantis Hive 2026-11-11).
-        reach = SEEK_AGGRESSIVE_RANGE if self.seek is not None else max(unit.aggression_range or 0, 4000) + 1500
+        reach = SEEK_AGGRESSIVE_RANGE if self.seek is not None and not self._off_focus(unit) \
+            else max(unit.aggression_range or 0, 4000) + 1500
         close_aggressive = aggressive and unit.distance <= reach
         if cfg.mode == "energy":
             return close_aggressive
@@ -366,12 +406,11 @@ class FightMixin:
                     self._learn(lambda l: l.effect_started("buff", skill))
                 if skill is self.trap:
                     self._debug("magnet trap used")
-                # Only an attack skill that keeps firing holds the blaster for its active time. The Magnet Trap and
-                # skills that put something down run on their own: holding for their active time left the ship idle
-                # for 26 s after a trap with an Assassin on it (Vénar 2026-11-15 12:18:02-12:18:28).
-                firing = getattr(skill, "on_enemy", False) and skill in attacks and not deploys
-                hold = (getattr(skill, "active_time", 0.0) or 1.0) if firing else (skill.warmup or 0.0) + CAST_MARGIN_S
-                self.weapon_hold = now + hold + WEAPON_GAP_S
+                # No skill stops the blaster while it is active (user, 2026-11-20): the blaster waits only for the
+                # skill's warmup. Holding for the active time left the ship idle 16.5 s after each Gemini Time Damage
+                # (key 8) in a 14-attacker fight on Lustra, and it died (10:24-10:26); the same with a Magnet Trap
+                # (Vénar 2026-11-15, 26 s idle).
+                self.weapon_hold = now + (skill.warmup or 0.0) + CAST_MARGIN_S + WEAPON_GAP_S
                 return True
             return False
         if blaster is not None and blaster.ready and target.distance <= (blaster.range or 3000) \
@@ -593,7 +632,7 @@ class FightMixin:
         """An enemy in the way that the bot may fight to clear it: not a squad member, not ignored for now (could
         not be reached or selected), not on the ignore list."""
         return unit.unit_id not in self.danger_ids and unit.unit_id not in self.ignored \
-            and not self._name_in_list(unit, self.config.ignore_names)
+            and not self._ignored(unit)
 
     def _aggro_reach(self, unit, margin=True):
         """How close the ship may come to an enemy it does not mean to pull (margin: plus AGGRO_MARGIN)."""

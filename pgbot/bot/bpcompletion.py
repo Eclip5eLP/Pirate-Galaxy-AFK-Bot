@@ -40,11 +40,24 @@ class BPCompletionMixin:
         saved = _load_state().get("bp_progress") or {}
         age = time.time() - (saved.get("at") or 0)
         self.bp_hangar_target = None
-        if saved.get("system") == system and age < BP_REUSE_S and saved.get("found"):
+        # Only with the item data saved too (older saves lack it: the hangar is read once more).
+        # Saves from before 2026-11-20 can hold addresses as part counts (torn container reads): not reused.
+        polluted = any(not isinstance(v, int) or not 0 <= v <= MAX_SAVED_PARTS
+                       for v in (saved.get("found") or {}).values())
+        if polluted:
+            self._log("info", "Saved blueprint progress holds wrong part counts; reading it in the hangar again")
+        # Only the same pilot's progress (Settings: Pilot to log in; saves without a row are from row 1).
+        same_pilot = int(saved.get("pilot_row") or 1) == int(getattr(self.config, "pilot_row", 1) or 1)
+        if saved.get("system") == system and age < BP_REUSE_S and saved.get("found") and saved.get("templates")                 and not polluted and same_pilot:
             for key, value in saved["found"].items():
                 template_id = int(key) if key.lstrip("-").isdigit() else key
                 self.blueprints.found[template_id] = max(self.blueprints.found.get(template_id) or 0, value)
             self.bp["trusted"] = True
+            # The item data the hangar loaded (color patterns from CONFIGURATION > Color Pattern, ships): without it
+            # Bevel Shapes, Maze, Puzzle and the GC-X Fusion Engineer were "not identified" after every restart that
+            # skipped the hangar (2026-11-19).
+            self.bp["saved_templates"] = {int(k) if k.lstrip("-").isdigit() else k: v
+                                          for k, v in (saved.get("templates") or {}).items()}
             self.bp_hangar_wanted = False
             self._log("info", f"Mode: BP Completion: {system} (progress from {age / 60:.0f} min ago; no hangar trip)")
             return
@@ -67,15 +80,40 @@ class BPCompletionMixin:
         if bp["planned"] is not None and bp["data_at"] == data and now - bp["planned"] < BP_REPLAN_S:
             return
         bp["planned"], bp["data_at"] = now, data
+        for template_id, entry in (bp.get("saved_templates") or {}).items():
+            book.templates.setdefault(template_id, entry)  # the client replaces its table on a reload: every plan
         resolved = bpplan.resolve(bp["system"], book.templates)
         book.track([i for _, i, _ in resolved if i is not None])
         found = book.found_now()
-        plan = bpplan.plan(bp["system"], book.templates, found)
+        _apply_pickup_messages(found, resolved, getattr(book, "seen", {}))
+        plan = bpplan.plan(bp["system"], book.templates, found, (getattr(book, "seen", {}) or {}).get("__totals__"))
         if bp.get("trusted") or book.container_seen is not None:
             # Kept for a restart (see _setup_bp); only counts read this run or restored, never an empty book.
             bp["trusted"] = True
+            kept = dict(bp.get("saved_templates") or {})
+            kept.update({i: book.templates[i] for _, i, _ in resolved if i is not None and i in book.templates})
+            bp["saved_templates"] = kept
             _save_state({"bp_progress": {"system": bp["system"], "at": time.time(),
-                                         "found": {str(k): v for k, v in found.items() if v}}})
+                                         "pilot_row": int(getattr(self.config, "pilot_row", 1) or 1),
+                                         "found": {str(k): v for k, v in found.items() if v},
+                                         "templates": {str(k): v for k, v in kept.items()}}})
+        if not bp.get("skipped_logged"):
+            # Every site blueprint of the system that is not planned, with the reason, in the debug log; the run log
+            # gets a count, and a warning for the unexpected reason (user, 2026-11-21: blueprints were dropped
+            # silently more than once).
+            bp["skipped_logged"] = True
+            skipped = []
+            bpplan.system_blueprints(bp["system"], skipped)
+            for label, reason, _ in skipped:
+                self._debug(f"BP Completion {bp['system']}: left out {label}: {reason}")
+            odd = [label for label, _, warn in skipped if warn]
+            if odd:
+                self._log("warning", f"BP Completion {bp['system']}: {len(odd)} blueprint(s) left out, their site "
+                                     f"location matches no planet: {', '.join(odd[:6])}{' ...' if len(odd) > 6 else ''}")
+            if skipped:
+                self._log("info", f"BP Completion {bp['system']}: {len(skipped)} site blueprint(s) not planned "
+                                  f"(events, shop, Ancient, rare patterns{', unknown places' if odd else ''}; "
+                                  f"list in the debug log)")
         if plan["unknown"] and not bp["unknown_logged"]:
             bp["unknown_logged"] = True
             more = " ..." if len(plan["unknown"]) > 8 else ""
@@ -108,7 +146,10 @@ class BPCompletionMixin:
             planet, entries = min(planets.items(), key=fit)
         names, levels = bpplan.seek_targets(entries, planet)
         exact_known = {myzen.normalize(n) for n in assets.enemy_names()}
-        self.seek = {"names": names, "levels": levels, "exact": all(myzen.normalize(n) in exact_known for n in names)}
+        wants = bpplan.seek_wants(entries, planet)
+        self.seek = {"names": names, "levels": levels, "exact": all(myzen.normalize(n) in exact_known for n in names),
+                     "spawners": myzen.spawners(names, exact_known), "wants": wants,
+                     "name_levels": bpplan.name_levels(wants)}
         here = assets.display_name(world.current_planet)
         if bp["planet"] != planet:
             started = sum(1 for e in plan["missing"] if e["progress"][0] > 0)
@@ -280,3 +321,23 @@ class BPCompletionMixin:
         if self.bp is not None:
             self.bp["planned"] = None  # plan again with the fresh progress
         return True
+
+
+def _apply_pickup_messages(found, resolved, seen):
+    """Raise the parts counts by the game's pickup messages, matched to the plan's blueprints by name. BlueprintBook
+    applies them only to templates the client has loaded; after a restart most counts come from the saved progress,
+    so "Converted known blueprint 'Enhanced Fusion Speed Actuator'" (complete) left it at 3/4 and the bot farmed it on
+    (user, 2026-11-19). Names are compared without spaces and punctuation ("Thermo-blast" in the message,
+    "Thermoblast" on the site). A completed blueprint whose parts count is not known counts as done (999)."""
+    by_name = {myzen.normalize(name): value for name, value in seen.items()}
+    for entry, template_id, needed in resolved:
+        if template_id is None:
+            continue
+        # Every name the game may use: the site adds "Spaceship" to ships ("STAM X-Shadow Sniper Spaceship"), the
+        # game's message does not (2026-11-20).
+        value = next((by_name[v] for v in bpplan._name_variants(entry) if v in by_name), None)
+        if value == "known":
+            found[template_id] = max(found.get(template_id, 0), needed or 999)
+        elif isinstance(value, int):
+            found[template_id] = max(found.get(template_id, 0), value)
+

@@ -37,7 +37,9 @@ class DronesMixin:
         if role == "cryonite":
             return time.monotonic() < self.cryonite_pickup_until
         if role == "blueprint":
-            return self.seek is not None and attackers > 0
+            # Also while fighting a target that does not shoot back: drops are rolled on the kill, and the sought
+            # Menders (Mizar Magnet Sticky Bomb) and Harvesters never attack (2026-11-20).
+            return self.seek is not None and (attackers > 0 or self.target_id is not None)
         if role == "combat":
             return attackers > 0 and (attackers >= DEFENSE_ATTACKERS[self.caution] or hull < DEFENSE_HULL[self.caution])
         return False

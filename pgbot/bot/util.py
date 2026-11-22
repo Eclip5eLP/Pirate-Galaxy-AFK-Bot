@@ -82,3 +82,13 @@ def _same_place(zone, name):
 
 class StopBot(Exception):
     """Raised inside the loop when the bot must pause."""
+
+
+class GameRestart(Exception):
+    """Planned game restart (uptime, see GAME_RESTART_AFTER_H): raised in orbit, the run ends and the game starts
+    again."""
+
+
+class GameCrashed(Exception):
+    """The game showed its crash message box: the run ends and the game is started again (not an OSError, so the
+    loop's read-glitch handling does not swallow it)."""

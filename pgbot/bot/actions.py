@@ -47,6 +47,8 @@ class ActionsMixin:
         # The blaster reports isActive permanently (seen live 2026-11-11: status 0, isActive True while idle), so the
         # "running" rule would block it completely; it only applies to the other skills.
         desc = getattr(item, "desc", None) or ""
+        if not item.hotkey:
+            return False  # not on the action bar
         if "blaster" not in desc and self._running(item):
             return False
         now = time.monotonic()
@@ -106,7 +108,11 @@ class ActionsMixin:
                 before = self.press_ready.pop(key, {})
                 # Never the blaster: its flags are unreliable (isActive stuck), it "went off" after every press and
                 # took keys 2, 6, 1 and 8 from the collector in 30 s (07:02:16-07:02:38, 2026-11-17).
-                other = next((i for i in items if i is not item and before.get(i.desc) and (not i.ready or i.is_active)
+                # "Went off" = no longer ready, or really running: a stuck isActive does not count. The Gemini rocket
+                # reads ready and active at once, all the time; it "went off" after collector presses, took key 2
+                # (23:09:59) and the bot then pressed the collector for the rocket, held the blaster for it and died
+                # (2026-11-19 23:11, Lustra).
+                other = next((i for i in items if i is not item and before.get(i.desc) and (not i.ready or self._running(i))
                               and "blaster" not in (i.desc or "")
                               and now - self.last_skill.get(i.hotkey, -math.inf) > SKILL_CONFIRM_S + 1.0), None)
                 # Only a press with no other key pressed until now counts (01:53:43: a key 5 press came in between and
@@ -114,6 +120,8 @@ class ActionsMixin:
                 # key's press, nothing goes off by itself - user).
                 if other is not None and any(k != key and since < t <= now for k, t in self.last_skill.items()):
                     other = None
+                if getattr(self, "keys_from_memory", False):
+                    other = None  # keys read from the ship's slot list are right: nothing to learn
                 crossed = self.key_crossed
                 if other is not None and crossed.get(key) != other.desc:
                     crossed[key] = other.desc  # seen once: learned only when the same key does it again
@@ -125,7 +133,7 @@ class ActionsMixin:
                     self._try_other_key(item, by_key)
                     continue
                 self.skill_fails[key] = self.skill_fails.get(key, 0) + 1
-                if self.skill_fails[key] >= SKILL_FAILS and self._try_other_key(item, by_key):
+                if self.skill_fails[key] >= SKILL_FAILS and not getattr(self, "keys_from_memory", False)                         and self._try_other_key(item, by_key):
                     self.skill_fails[key] = 0
                     continue
                 if self.skill_fails[key] >= SKILL_FAILS and "repair" not in (item.desc or ""):
@@ -169,6 +177,7 @@ class ActionsMixin:
     def _apply_hotkeys(self, world):
         """Keys learned per ship (checked against the game) override the first guess (state.py)."""
         self.ship_type_now = world.ship_type
+        self.keys_from_memory = world.slots_known
         if not world.ship_type or not world.items:
             return
         now = time.monotonic()
@@ -176,6 +185,10 @@ class ActionsMixin:
         if not cache or len(cache) < 3 or cache[0] != world.ship_type or now - cache[1] > 10:
             learned = (_load_state().get("hotkeys") or {}).get(world.ship_type, {})
             self._hotkey_cache = cache = (world.ship_type, now, learned)
+        # The keys come from the ship's slot list in memory (state.py); learned keys only fill in when that is
+        # missing. Learning by testing put the rocket on the collector's key and got the ship killed (2026-11-19).
+        if world.slots_known:
+            return
         for item in world.items:
             if item.desc in cache[2]:
                 item.hotkey = cache[2][item.desc]

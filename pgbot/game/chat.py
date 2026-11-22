@@ -71,12 +71,49 @@ def _key(line):
     return line["channel"], line["sender"], line["text"]
 
 
+def read_channels(jvm, chat, errors=None):
+    """[{"row", "channel", "name"}] of the chat bar's drop-down (aob.aWl), in its order: "Global", "Alliance", "Clan",
+    or "Private: <player>" for a private chat (name: the player). A private chat whose name cannot be read is listed
+    as "Private: None" (its reason appended to errors)."""
+    out = []
+    for row, oop in enumerate(java.array_list(jvm, jvm.get(chat, "aWl"))):
+        kind = CHANNEL_CLASSES.get(jvm.class_name(oop))
+        name = None
+        if kind == "Private":
+            try:
+                inner = java.Properties(jvm, jvm.get(oop, "properties")).raw("chat")
+                name = java.Properties(jvm, jvm.get(inner, "properties")).get("title") if inner else None
+                name = java.string(jvm, name) if isinstance(name, int) else name
+            except Exception as error:
+                name = None
+                if errors is not None:
+                    errors.append(f"{type(error).__name__}: {error}"[:200])
+        out.append({"row": row, "channel": f"Private: {name}" if kind == "Private" else (kind or "?"), "name": name})
+    return out
+
+
+def bar_state(jvm, chat):
+    """(channels, selected index) of the chat bar, from memory (aob.aWl and aob.selectedChat; the Up / Down keys
+    move selectedChat, see bot/chatsend.py). Raises LookupError when the address no longer holds the chat object."""
+    try:
+        found = chat is not None and jvm.class_name(chat) == CHAT_CLASS
+    except Exception:
+        found = False  # moved by the garbage collector: the watcher finds it again
+    if not found:
+        raise LookupError("the chat bar is not found in memory (try again in a few seconds)")
+    selected = jvm.get(chat, "selectedChat")
+    if not isinstance(selected, int):
+        raise LookupError("the chat bar's selected channel is not readable")
+    return read_channels(jvm, chat), selected
+
+
 class ChatReader:
     """Reads the quick chat list. update() may scan the heap (a few seconds): call it from a worker thread."""
 
     def __init__(self, process):
         self.process = process
         self.jvm = JVM(process)
+        self.channel_error = None  # why a private chat's name could not be read (last time)
         self.chat = None          # address of the live chat object
         self.scanned_at = -1e9
         self.seen = {}            # (widget name, text) -> first seen (time.time())
@@ -139,24 +176,14 @@ class ChatReader:
         return data[:end].decode("utf-16-le", "replace")
 
     def channels(self):
-        """[{"row", "channel", "name"}] of the chat bar's drop-down, in its order: "Global", "Alliance", "Clan", or
-        "Private: <player>" for a private chat (name: the player). [] before the chat object is found."""
-        jvm = self.jvm
+        """[{"row", "channel", "name"}] of the chat bar's drop-down, in its order (read_channels). [] before the chat
+        object is found."""
         if self.chat is None:
             return []
-        out = []
-        for row, oop in enumerate(java.array_list(jvm, jvm.get(self.chat, "aWl"))):
-            kind = CHANNEL_CLASSES.get(jvm.class_name(oop))
-            name = None
-            if kind == "Private":
-                try:
-                    inner = java.Properties(jvm, jvm.get(oop, "properties")).raw("chat")
-                    name = java.Properties(jvm, jvm.get(inner, "properties")).get("title") if inner else None
-                    name = java.string(jvm, name) if isinstance(name, int) else name
-                except Exception:
-                    name = None
-            if kind:
-                out.append({"row": row, "channel": f"Private: {name}" if kind == "Private" else kind, "name": name})
+        errors = []
+        out = read_channels(self.jvm, self.chat, errors)
+        if errors:
+            self.channel_error = errors[-1]
         return out
 
     def update(self):
@@ -195,11 +222,23 @@ class ChatReader:
         # longest overlap between the end of the known lines and the start of the list.
         known = [_key(line) for line in self.lines]
         keys = [_key(line) for line in shown]
-        overlap = 0
-        for size in range(min(len(keys), len(known)), 0, -1):
-            if keys[:size] == known[-size:]:
-                overlap = size
-                break
+
+        def overlap_of(candidate):
+            for size in range(min(len(candidate), len(known)), 0, -1):
+                if candidate[:size] == known[-size:]:
+                    return size
+            return 0
+        # The list can also come rotated: the newest line in the slot of the oldest, first in the list, the older ones
+        # after it (2026-11-20 15:00: each new message brought the whole list back on the page). The rotation that
+        # lines up best with the known end is the real order (no rotation wins a tie).
+        best_r, overlap = 0, overlap_of(keys)
+        for r in range(1, len(keys)):
+            size = overlap_of(keys[r:] + keys[:r])
+            if size > overlap:
+                best_r, overlap = r, size
+        if best_r:
+            shown = shown[best_r:] + shown[:best_r]
+            keys = keys[best_r:] + keys[:best_r]
         if overlap == 0 and known:
             recent = set(known)
             for i, key in enumerate(keys):  # a list that starts before the known end: skip the known part
@@ -222,7 +261,9 @@ class ChatWatcher:
         self._lock = threading.Lock()
         self._recent = []
         self._channels = []
+        self.chat_address = None  # the live chat object (aob) as last found; read with bar_state by the sender
         self.errors = 0
+        self.last_error = None  # why the last read failed (logged once by the app)
         self.thread = threading.Thread(target=self._run, name="chat", daemon=True)
         self.thread.start()
 
@@ -247,12 +288,23 @@ class ChatWatcher:
             while not self._stop.is_set():
                 try:
                     reader.update()
-                    channels = reader.channels()
                     with self._lock:
                         self._recent = list(reader.lines)
-                        self._channels = channels
-                except Exception:
+                    self.chat_address = reader.chat
+                except Exception as error:
                     self.errors += 1
+                    self.last_error = f"lines: {type(error).__name__}: {error}"[:200]
+                try:
+                    # Apart from the lines: a failing line read would keep an early channel list (names not set yet).
+                    channels = reader.channels()
+                    with self._lock:
+                        self._channels = channels
+                    if reader.channel_error:
+                        self.last_error = f"channel name: {reader.channel_error}"
+                        reader.channel_error = None
+                except Exception as error:
+                    self.errors += 1
+                    self.last_error = f"channels: {type(error).__name__}: {error}"[:200]
                 self._stop.wait(SCAN_S)
         except Exception:
             self.errors += 1

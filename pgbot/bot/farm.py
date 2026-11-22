@@ -295,7 +295,7 @@ class FarmMixin:
         drops = self._drops_to_collect(cfg, collector, hull, world, local, home_x, home_y, now)
         if self.leaving:
             # Stop in orbit finishes up first: the loot near the ship (attackers are fought in _leave_planet).
-            if self.stop_in_orbit and drops and not attackers:
+            if (self.stop_in_orbit or self.leaving == "Going to orbit to restart the game") and drops and not attackers:
                 self.target_id = None
                 self._collect(world, min(drops, key=lambda u: u.distance), collector, "Collecting loot before orbit")
                 return
@@ -422,7 +422,35 @@ class FarmMixin:
                 and not self._in_danger(u.x, u.y, DANGER_TARGET_MARGIN)
             ]
             drops = [u for u in drops if self._loot_safe(world, u, now)]
+        self._note_lost_drop(cfg, collector, hull, world, drops, now)
         return drops
+
+    def _note_lost_drop(self, cfg, collector, hull, world, drops, now):
+        """Log why the drop being collected left the list (Mars spiral 20:14-20:19: "Collecting loot" and "Flying to
+        where enemies were seen" took turns every 2-4 s for 5 min, with no log line saying why)."""
+        if self.collect is None or self.collect_tick is None or now - self.collect_tick[1] > 3.0:
+            return
+        key = self.collect[0]
+        if any((round(u.x), round(u.y)) == key for u in drops) or now - self.lost_drop_note < 10:
+            return
+        unit = next((u for u in world.units if u.is_item and abs(u.x - key[0]) < 300 and abs(u.y - key[1]) < 300),
+                    None)
+        if unit is None:
+            reason = "not in view any more"
+        elif not cfg.collect_loot or not collector:
+            reason = "no collector"
+        elif hull < self.eff_engage_min:
+            reason = f"hull {hull * 100:.0f}% below {self.eff_engage_min * 100:.0f}%"
+        elif unit.distance > cfg.loot_radius:
+            reason = f"{unit.distance:.0f} away, over the loot radius"
+        elif (round(unit.x), round(unit.y)) in self.ignored:
+            reason = "on the ignore list"
+        elif self._in_danger(unit.x, unit.y, DANGER_TARGET_MARGIN):
+            reason = "near a dangerous squad"
+        else:
+            reason = "not safe (enemies or a squad on the way)"
+        self.lost_drop_note = now
+        self._debug(f"drop at {key} left the loot list: {reason}")
 
     def _repair_tick(self, repair, hull, cfg, damage_rate, world, now):
         """Press the repair when the hull is (about to be) below the line; else hold everything for it."""
@@ -505,6 +533,23 @@ class FarmMixin:
             self.destination, self.home_planet, self.patrol_centre = trip["destination"], trip["home_planet"], None
             self._log("info", f"Refilled on {ENERGY_PLANET} ({share * 100:.0f}%); going back to {self._home_name()}")
 
+    def _route_length(self, world, unit):
+        """Length of the way from the ship to an enemy around the terrain (straight when the line is clear); inf when
+        no way is found within twice SEEK_TARGET_MAX. One search from the ship serves every enemy for a second."""
+        nav = self._nav(world)
+        if nav is None or nav.line_clear((world.x, world.y), (unit.x, unit.y)):
+            return unit.distance
+        now = time.monotonic()
+        cell = nav.to_cell(world.x, world.y)
+        cached = getattr(self, "route_tree", None)
+        if cached is None or cached[0] != (world.planet_map, cell) or now - cached[1] > 1.0:
+            cached = ((world.planet_map, cell), now, nav.tree((world.x, world.y), limit=SEEK_TARGET_MAX * 2))
+            self.route_tree = cached
+        points = nav.route(cached[2], (world.x, world.y), (unit.x, unit.y))
+        if not points:
+            return math.inf
+        return sum(math.hypot(bx - ax, by - ay) for (ax, ay), (bx, by) in zip(points, points[1:]))
+
     def _farm_enemies(self, world, now, cfg, local, home_x, home_y):
         """The enemies worth a fight this tick (in reach of the farm spot, not squads or spawn drops, ...)."""
         enemies = []
@@ -544,6 +589,17 @@ class FarmMixin:
                 # The way to it passes a squad (where the squad will be, when its way is known): not a target now.
                 # Chosen anyway, the bot flew toward the squad, gave the target up there, wandered back and took the
                 # next one beyond it (Vénar 22:11-22:13, back and forth in the landing area for minutes).
+                continue
+            if not attacking and self.seek is not None and (u.distance > SEEK_TARGET_MAX
+                                                             or self._route_length(world, u) > SEEK_TARGET_MAX):
+                # Seek modes: a sought enemy far off is left to the patrol. A Harvester L24 seen 24,800 away (the
+                # spawner of the sought Interceptors) stayed the target for 37 min on Lustra: a long detour route, the
+                # Frenzoids on the way attacked, it fought, then took the same far Harvester again and never patrolled
+                # to the L25 areas (2026-11-19). The patrol visits the spawn areas and finds it closer.
+                # Far by the way there too, not only in a straight line: in Mars' north-east spiral an Imperial Rocket
+                # Turret 11,000 away lay one ring further out; the route ran around the spiral, the straight distance
+                # grew past the limit on the way, the patrol turned back, it came within the limit again: 25 min
+                # back and forth in one spot (2026-11-21 14:50-15:15).
                 continue
             if self._wanted(u, attacking):
                 enemies.append(u)
@@ -635,6 +691,54 @@ class FarmMixin:
             self._key("F5")
         self.status = self.leaving
 
+    def _seek_areas(self, world, focus=True):
+        """Site spawn areas of the sought enemies (and their spawners), at the sought levels when the site's level
+        labels were read. Then, also as the fallback for unread labels: an enemy's areas where it was learned only at
+        other levels are left out (Lustra: the Custodian Commanders west and in the
+        middle are R23, the R25 ones for the Cortex Stun Charge fly in the south-east; 42 R23 fights in 3 h,
+        2026-11-20). An enemy keeps all its areas when that would leave none.
+        focus: only the areas where the level-bound blueprints drop (myzen.focus_areas; Mars' R50 north-east)."""
+        planet = assets.display_name(world.current_planet)
+        levels = self.seek.get("levels")
+        exact = self.seek.get("exact", True)
+        areas, dropped = [], []
+        for name in self.seek["names"] + self.seek.get("spawners", []):
+            # Site levels first (the overlays' level labels); none at the sought levels (a misread, or a level the
+            # site does not show) -> all areas, and the learned sightings below decide (user, 2026-11-20).
+            own = [a for a in (myzen.enemy_areas(planet, [name], levels) or myzen.enemy_areas(planet, [name]))
+                   if a not in areas]
+            if not own or not levels:
+                areas += own
+                continue
+            seen = self._learn(lambda l: l.places_of(
+                world.planet_map, lambda e: myzen.enemy_matches(e.rpartition("|")[0], None, [name], exact=exact),
+                min_count=1)) or []
+            wanted = {(x, y) for x, y, _ in (self._learn(lambda l: l.places_of(
+                world.planet_map, lambda e: self._seek_etype(e) and myzen.enemy_matches(
+                    e.rpartition("|")[0], None, [name], exact=exact), min_count=1)) or [])}
+            kept = []
+            for ax, ay in own:
+                near = [(x, y, n) for x, y, n in seen if math.hypot(x - ax, y - ay) <= AREA_LEVEL_RADIUS]
+                other = sum(n for x, y, n in near if (x, y) not in wanted)
+                if other >= AREA_OTHER_LEVEL_MIN and not any((x, y) in wanted for x, y, _ in near):
+                    dropped.append((ax, ay))
+                else:
+                    kept.append((ax, ay))
+            areas += kept or own
+        quiet = self.patrol_key == (world.planet_map, "areas", tuple(self.seek["names"]))
+        if dropped and not quiet:
+            self._debug(f"patrol: {len(dropped)} spawn areas left out, only other levels seen there: {dropped}")
+        if focus and self.seek.get("wants"):
+            focused = myzen.focus_areas(planet, self.seek["wants"], areas)
+            if focused and len(focused) < len(areas):
+                if not quiet:
+                    self._debug(f"patrol: {len(focused)} of {len(areas)} spawn areas hold the blueprints that drop "
+                                f"in few places (level bound): {focused}")
+                self.seek_focus = focused
+                return focused
+        self.seek_focus = None
+        return areas
+
     def _patrol(self, world, whole_map=False):
         """Sweep the open ground reachable from the start spot until enemies show up (see patrol.py).
         whole_map: roam the planet (Wander). Seek modes visit the sought enemies' spawn areas from the site data
@@ -645,7 +749,17 @@ class FarmMixin:
         if nav is not None:
             areas = []
             if self.seek is not None:
-                areas = myzen.enemy_areas(assets.display_name(world.current_planet), self.seek["names"])
+                # Spawners too: spawned units have no spawn areas of their own (Interceptors come from Harvesters).
+                areas = self._seek_areas(world)
+                if not areas:
+                    # No site spawn areas (Technatoria has none): where this exact type and level was seen before.
+                    # The R33 Paralyzors for the Fusion Power Stun Dome live in one corner of Technatoria; the
+                    # whole-map wander met only R31-32 enemies for 13 min (2026-11-19).
+                    learned = self._learn(lambda l: l.places_of(world.planet_map, self._seek_etype)) or []
+                    areas = [(x, y) for x, y, _ in learned[:LEARNED_AREAS_MAX]]
+                    if areas and self.patrol_key != (world.planet_map, "areas", tuple(self.seek["names"])):
+                        self._debug(f"patrol: no site spawn areas; {len(areas)} learned places of "
+                                    f"{', '.join(self.seek['names'])} ({sum(n for *_, n in learned)} sightings)")
             if areas:
                 key = (world.planet_map, "areas", tuple(self.seek["names"]))
             else:
@@ -653,6 +767,11 @@ class FarmMixin:
             if self.patrol is None or self.patrol_key != key:
                 if areas:
                     self.patrol = Patrol.from_points(nav, areas, start=(world.x, world.y))
+                    if not len(self.patrol) and self.seek is not None:
+                        # The focused areas cannot be reached from here: all of them then.
+                        every = self._seek_areas(world, focus=False)
+                        if len(every) > len(areas):
+                            self.patrol = Patrol.from_points(nav, every, start=(world.x, world.y))
                     self._debug(f"patrol: {len(self.patrol)} spawn areas of {', '.join(self.seek['names'])}"
                                 f" ({self.patrol.unreachable} not reachable from here left out)")
                     if not len(self.patrol) and self.patrol.unreachable:

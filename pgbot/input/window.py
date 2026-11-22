@@ -85,6 +85,69 @@ def game_window(pid):
     return max(candidates, key=lambda w: w.width * w.height)
 
 
+# Native crashes of the client can end in a Visual C++ runtime message box instead of the process exiting
+# (2026-11-20 21:18, server: "Runtime Error! ... requested the Runtime to terminate it in an unusual way"); the process
+# then stays open with its memory frozen until the box is closed. Seen under Wine as a '#32770' dialog of the game
+# process titled "Microsoft Visual C++ Runtime Library" with a Static "Runtime Error!..." text.
+_CRASH_TITLES = ("runtime library", "program error", "fatal error")
+_CRASH_TEXTS = ("runtime error", "terminate it in an unusual way", "has stopped working", "fatal error")
+
+
+def crash_dialog(pid):
+    """The game's crash message box (a visible dialog with a runtime error text), or None."""
+    for w in windows_of(pid):
+        if not w.visible or w.class_name != "#32770":
+            continue
+        texts = [w.title.lower()] + [c.title.lower() for c in w.children]
+        if any(t in texts[0] for t in _CRASH_TITLES) or any(m in t for t in texts for m in _CRASH_TEXTS):
+            return w
+    return None
+
+
+_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+_kernel32.OpenProcess.restype = wintypes.HANDLE
+_kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+_kernel32.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+_kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+PROCESS_TERMINATE = 0x0001
+
+
+_kernel32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+_kernel32.GetSystemTimeAsFileTime.argtypes = [ctypes.POINTER(wintypes.FILETIME)]
+PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+
+
+def process_age_s(pid):
+    """Seconds since the process started, or None if not known."""
+    handle = _kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+    if not handle:
+        return None
+    try:
+        times = [wintypes.FILETIME() for _ in range(4)]
+        if not _kernel32.GetProcessTimes(handle, *[ctypes.byref(t) for t in times]):
+            return None
+        now = wintypes.FILETIME()
+        _kernel32.GetSystemTimeAsFileTime(ctypes.byref(now))
+
+        def value(ft):
+            return (ft.dwHighDateTime << 32) | ft.dwLowDateTime
+        created = value(times[0])
+        return (value(now) - created) / 1e7 if created else None
+    finally:
+        _kernel32.CloseHandle(handle)
+
+
+def end_process(pid):
+    """End a process that crashed and did not exit (only after its crash box was found). True if ended."""
+    handle = _kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+    if not handle:
+        return False
+    try:
+        return bool(_kernel32.TerminateProcess(handle, 1))
+    finally:
+        _kernel32.CloseHandle(handle)
+
+
 def foreground_hwnd():
     return _user32.GetForegroundWindow()
 

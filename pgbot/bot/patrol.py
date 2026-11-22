@@ -53,6 +53,7 @@ class Patrol:
         to the landing area, and unreachable spawn areas were each tried and given up)."""
         patrol = cls.__new__(cls)
         patrol.nav, patrol.wander, patrol.random = nav, False, random.Random()
+        patrol.prefer = None  # was never set here: AttributeError on every patrol tick (2026-11-19 19:57)
         patrol.targets = {}
         reach = nav.reachable(start, float("inf")) if start is not None else None
         patrol.unreachable = 0

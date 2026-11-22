@@ -18,6 +18,7 @@ import subprocess
 import time
 
 import cv2
+import numpy as np
 
 from ..game import location
 from ..input import vdesktop_move
@@ -32,6 +33,8 @@ LAUNCH_TIMEOUT_S = 900       # the launcher may download an update first
 LOGIN_TIMEOUT_S = 180        # from the game window to the ship in the world
 CLICK_GAP_S = 4.0            # after a click, the screen gets this long to change before clicking again
 MAX_CLICKS = 6               # per screen
+LIST_STILL_DIFF = 2.0        # the pilot list counts as drawn when two captures differ by less than this (mean)
+PILOT_RANK_TOLERANCE = 5     # a logged-in rank this far from the last run's is another pilot
 TOP_ROW = (-45, 34)          # first pilot's name relative to the centre of the "Select Pilot" title
 ROW_STEP = 63                # pilot rows are this far apart
 
@@ -91,6 +94,27 @@ class GameStarter:
             return None
         return loc[0] + tpl.shape[1] // 2, loc[1] + tpl.shape[0] // 2
 
+    def _check_pilot(self, world):
+        """The logged-in pilot is the one the bot farms with: its rank close to the last run's. Another pilot of the
+        account (a rank 2 alt, 2026-11-20) stops the start instead of running the bot on it."""
+        from .util import _load_state, _save_state
+        rank = world.rank_raw
+        if rank is None:
+            return
+        # Per row of the pilot list (Settings: Pilot to log in): another row is another pilot with its own rank (user,
+        # 2026-11-20). A first login on a row only records its rank.
+        ranks = _load_state().get("pilot_rank")
+        if not isinstance(ranks, dict):
+            ranks = {"1": ranks} if isinstance(ranks, int) else {}  # first version: one rank, saved with row 1
+        row = str(self.pilot_row)
+        last = ranks.get(row)
+        if last is not None and abs(rank - last) > PILOT_RANK_TOLERANCE:
+            raise StartFailed(f"logged in with another pilot (rank {rank}; the pilot in row {row} was rank {last} "
+                              f"last time); check Settings: Pilot to log in")
+        if last != rank:
+            ranks[row] = rank
+            _save_state({"pilot_rank": ranks})
+
     @staticmethod
     def _has_pilot(image, spot):
         """A pilot row has the green "Server Online" (or a coloured status) line under the name; the "Create new
@@ -126,8 +150,16 @@ class GameStarter:
 
     def start(self):
         """Starts the game and logs in. Returns the game's process id; raises StartFailed."""
-        if self._game_pid():
-            return self._game_pid()
+        pid = self._game_pid()
+        if pid:
+            # Server mode keeps the game when only the bot restarts (tools/server/session.sh): logged in, the bot takes
+            # it over; still at the login screen or the pilot list, it logs in from there.
+            world = self.read_world(pid)
+            if world is not None and world.zone in ("planet", "orbit", "hangar", "starmap") and                     (world.hitpoints or world.dead):
+                self._check_pilot(world)
+                return pid
+            self.log("info", "The game is open but not logged in; logging in")
+            return self._login(pid, None, set())
         launcher = location.launcher()
         if not launcher.exists():
             raise StartFailed(f"Launcher.exe not found in {location.folder()} (Settings: Game folder)")
@@ -175,6 +207,7 @@ class GameStarter:
         inp = BackgroundInput(pid)
         started = time.monotonic()
         clicks = {"login": 0, "pilot": 0}
+        list_area = None
         last_click = -1e9
         last_read = 0.0
         while True:
@@ -189,6 +222,7 @@ class GameStarter:
                 # dead); "dead" is read from the same ship properties, so it also means the ship is loaded.
                 if world is not None and world.zone in ("planet", "orbit", "hangar", "starmap") and \
                         (world.hitpoints or world.dead):
+                    self._check_pilot(world)
                     self.log("info", f"Game started and logged in ({time.monotonic() - started:.0f} s)")
                     return pid
             if time.monotonic() - started > LOGIN_TIMEOUT_S:
@@ -204,6 +238,15 @@ class GameStarter:
             title = self._find(image, "select_pilot_title")
             login = self._find(image, "login_button")
             if title is not None:
+                # Only a list that has stopped changing: a click while it was still being drawn logged into
+                # another pilot (rank 2 instead of 90, 2026-11-20 14:19; the rows never change order).
+                area = image[title[1]:title[1] + 340, max(0, title[0] - 150):title[0] + 170].astype(np.int16)
+                still = list_area is not None and list_area.shape == area.shape and \
+                    float(np.abs(area - list_area).mean()) < LIST_STILL_DIFF
+                list_area = area
+                if not still:
+                    self._sleep(0.7)
+                    continue
                 spot = (title[0] + TOP_ROW[0], title[1] + TOP_ROW[1] + ROW_STEP * (self.pilot_row - 1))
                 if not self._has_pilot(image, spot):
                     shot = self._save_screen(image, "pilot")

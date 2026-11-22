@@ -39,15 +39,25 @@ MAX_PARTS = 1000  # a parts count above this is no parts count
 # game said "collected (6/10)", and three "missing" blueprints were "Converted known blueprint". The game's pickup
 # messages carry the live count, so they are read too and kept here between runs (counts only go up).
 SEEN_FILE = pathlib.Path(os.environ.get("LOCALAPPDATA", ".")) / "pgbot" / "bp_seen.json"
+
+
+def seen_file(pilot_row=1):
+    """Pickup message counts of one pilot (Settings: Pilot to log in): row 1 keeps the first file name."""
+    row = int(pilot_row or 1)
+    return SEEN_FILE if row == 1 else SEEN_FILE.with_name(f"bp_seen_row{row}.json")
 COLLECTED = re.compile(r"^Blueprint '(.+)' collected\s*\((\d+)\s*/\s*(\d+)\)", re.I)
+TOTALS_KEY = "__totals__"  # in the seen file: display name -> parts needed, from "collected (n/m)"
 KNOWN = re.compile(r"^Converted known blueprint '(.+)' into", re.I)
+MESSAGES_NOTE_S = 600  # a status line about the message log reads this often (debug log)
 RETRY_S = 10  # after a failed read, try again this much later
 HANGAR_SCAN_S = 12  # after rescan(): search every 2 s this long (the server's fresh copy arrives after the panel opens)
 
 
 class BlueprintBook:
-    def __init__(self, process, log=lambda text: None, owns_process=False):
-        """owns_process: close the process handle when the worker ends (the bot gives the book its own handle)."""
+    def __init__(self, process, log=lambda text: None, owns_process=False, pilot_row=1):
+        """owns_process: close the process handle when the worker ends (the bot gives the book its own handle).
+        pilot_row: which pilot's pickup message counts to keep (one file per pilot)."""
+        self.seen_path = seen_file(pilot_row)
         self.process = process
         self.owns_process = owns_process
         self.log = log
@@ -64,6 +74,8 @@ class BlueprintBook:
         self.templates = {}  # template id -> {"desc": "$orbitalstrike.86", "needed": 14} (catalog(), BP Completion)
         self.seen = self._load_seen()  # display name -> parts found per the game's pickup messages
         self.seen_changes = 0  # counts pickup message updates (BP Completion re-plans on a change)
+        self.messages_read, self.messages_read_at = 0, None  # message log reads that worked, last one (monotonic)
+        self.messages_noted_at, self.messages_error_at = -1e9, -1e9
         # The container is a copy the client fetched from the server: one each time the hangar CONFIGURATION panel
         # (class avw) is built, and older copies stay in memory (one from hours earlier was read all night, found
         # 2026-11-17). Which copy is newest cannot be told by reference, but counts only go up: every copy is read
@@ -140,39 +152,55 @@ class BlueprintBook:
         if live is None:
             return found
         if live == "known":
-            return max(found or 0, self.parts_needed.get(template_id) or (entry or {}).get("needed") or 0)
+            needed = self.parts_needed.get(template_id) or (entry or {}).get("needed") or 0
+            return max(found or 0, needed if 0 <= needed <= MAX_PARTS else 999)  # 999: complete, count not known
         return max(found or 0, live)
 
-    @staticmethod
-    def _load_seen():
+    def _load_seen(self):
         try:
-            return json.loads(SEEN_FILE.read_text(encoding="utf-8"))
+            return json.loads(self.seen_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
     def _read_messages(self, jvm):
         """Pickup messages in the game's message log: live parts counts and completed ("known") blueprints."""
         changed = False
-        for text in jvm.consistent(lambda: messages.read_log(jvm)):
+        texts = jvm.consistent(lambda: messages.read_log(jvm))
+        self.messages_read += 1
+        self.messages_read_at = time.monotonic()
+        for text in texts:
             match = COLLECTED.match(text)
             if match:
                 name, count, total = match.group(1), int(match.group(2)), int(match.group(3))
+                totals = self.seen.setdefault(TOTALS_KEY, {})
+                if total > 0 and totals.get(name) != total:
+                    # Parts needed, for items whose template is in no data (Sol Skulker Sticky Bomb, 2026-11-20).
+                    totals[name], changed = total, True
                 old = self.seen.get(name)
                 if count >= total > 0:  # the last part (10/10): complete from now on (user, 2026-11-17)
                     if old != "known":
                         self.seen[name], changed = "known", True
+                        self.log(f"pickup: {name} {count}/{total}, complete (message: {text[:120]})")
                     continue
                 if old != "known" and (old is None or count > old):
                     self.seen[name], changed = count, True
+                    self.log(f"pickup: {name} {count}/{total} (message: {text[:120]})")
                 continue
             match = KNOWN.match(text)
             if match and self.seen.get(match.group(1)) != "known":
                 self.seen[match.group(1)], changed = "known", True
+                self.log(f"pickup: {match.group(1)} is known, complete (message: {text[:120]})")
+        now = time.monotonic()
+        if now - self.messages_noted_at > MESSAGES_NOTE_S:
+            # Proof of life (2026-11-20: three blueprints finished overnight left no record; nothing showed whether
+            # the message log was read at all).
+            self.messages_noted_at = now
+            self.log(f"message log: {self.messages_read} reads OK, {len(texts)} messages now")
         if changed:
             self.seen_changes += 1
             try:
-                SEEN_FILE.parent.mkdir(parents=True, exist_ok=True)
-                SEEN_FILE.write_text(json.dumps(self.seen, indent=1, sort_keys=True), encoding="utf-8")
+                self.seen_path.parent.mkdir(parents=True, exist_ok=True)
+                self.seen_path.write_text(json.dumps(self.seen, indent=1, sort_keys=True), encoding="utf-8")
             except OSError:
                 pass
 
@@ -222,8 +250,11 @@ class BlueprintBook:
                     pass
                 try:
                     self._read_messages(jvm)
-                except Exception:
-                    pass
+                except Exception as error:
+                    # Logged, at most once a minute (it was silent: a reader that failed for hours left no trace).
+                    if time.monotonic() - self.messages_error_at > 60:
+                        self.messages_error_at = time.monotonic()
+                        self.log(f"message log: read failed ({type(error).__name__}: {error})")
                 continue
             try:
                 self.parts_needed[template_id] = self._parts_needed(jvm, template_id)
@@ -290,7 +321,7 @@ class BlueprintBook:
             if self.installed and not any(f"foundcount_{t}" in props for t in self.installed):
                 continue  # not the player's (a clan's)
             copies.append(oop)
-            parts = sum(int(props.get(f"foundcount_{t}") or 0) for t in self.templates)
+            parts = sum(_count(props, t) for t in self.templates)
             if parts > best_parts:
                 best, best_parts = oop, parts
         if copies and (best != self.container or len(copies) != len(self.copies)):
@@ -312,7 +343,10 @@ class BlueprintBook:
                 needed = java.Properties(jvm, jvm.get(oop, "properties")).get("unlockcount")
             except Exception:
                 continue
-            if needed:
+            # Capped like the catalogue: some templates hold a long timestamp-like value there; uncapped it reached
+            # the saved progress as 78,100,976 parts of $stunbuff.44 (a "known" blueprint counts its parts needed
+            # as found; 2026-11-20 21:17).
+            if isinstance(needed, (int, float)) and 0 < needed <= MAX_PARTS:
                 return int(needed)
         return None
 
@@ -390,6 +424,15 @@ class BlueprintBook:
         if self.container not in self.copies:
             self.container = self.copies[0]
         for template_id in (ids if ids is not None else list(self.parts_needed) + list(self.tracked)):
-            value = max(int(m.get(f"foundcount_{template_id}") or 0) for m in maps)
+            value = max(_count(m, template_id) for m in maps)
             self.found[template_id] = max(self.found.get(template_id) or 0, value)
         self.container_seen = time.monotonic()
+
+
+def _count(props, template_id):
+    """Parts found of a template in one container map: 0 unless it is a real count (see Properties.get_int)."""
+    try:
+        value = props.get_int(f"foundcount_{template_id}")
+    except Exception:
+        return 0
+    return value if value is not None and 0 <= value <= MAX_PARTS else 0

@@ -24,14 +24,14 @@ from ..input import awake, window
 from ..input.background import BackgroundInput, GameWindowGone
 from ..input.vdesktop import VirtualDesktops
 from ..mem.jvm import JVM, SnapshotFailed
-from ..mem.process import MemoryReadError, Process
+from ..mem.process import MemoryReadError, Process, find_pids
 from .chatsend import ChatSender
 from .config import Config
 from .orbs import OrbMemory
 from .squadtrack import SquadTracks
 from .gamestart import GameStarter, StartFailed
 from .constants import *  # noqa: F401,F403
-from .util import _load_state, _save_state, StopBot
+from .util import _load_state, _save_state, GameCrashed, GameRestart, StopBot
 from .camera import CameraMixin
 from .actions import ActionsMixin
 from .movement import MovementMixin
@@ -61,11 +61,14 @@ class Bot(
         self.route = None
         self.route_check = lambda x, y: False  # set each farm tick: point on a Death Squad route while one is about
         self.target_id = None  # enemy being fought
+        self.noted_rank = None  # pilot rank last compared with the saved one (_note_rank)
         self.saved_planet = None  # last planet written to the state file
         self.enemy_blocked = False  # the last move call found only ways through enemies (they are cleared first)
-        self.progress = None  # [goal, best distance, time of best] of the current move
+        self.progress = None  # [goal, best distance, time of best, measured along the route] of the current move
         self.progress_touch = 0.0
         self.last_blocked_note = 0.0
+        self.last_hop_note = 0.0
+        self.lost_drop_note = 0.0
         self.path_blockers = {}
         self.blocked_since = {}  # move goal -> first time it was found blocked by enemies
         self.last_fight_time = 0.0  # last tick spent in range of a target, firing
@@ -73,6 +76,8 @@ class Bot(
         self.leave_fight_at = 0.0   # last time something attacked the ship while leaving
         self.take_off_at = None     # last F5 while leaving
         self.stop_in_orbit = False  # "Stop in orbit": finish the fight and loot, take off, stop in orbit
+        self.game_since = None  # time.monotonic() at which the game process started (planned restart)
+        self.game_restart_noted = False
         self.reland = False         # out of energy, no field close: to orbit and land again (landing zone check)
         self.energy_trip = None     # refill trip to Terasa: what to go back to (destination, home planet)
         self.cast_until = 0.0  # no skill presses before this (another skill is warming up)
@@ -243,6 +248,7 @@ class Bot(
     def toggle_pause(self):
         if self.running:
             self.paused = not self.paused
+            self.user_paused = self.paused
             self.status = "Paused" if self.paused else "Resuming"
 
     def drain_events(self):
@@ -329,6 +335,26 @@ class Bot(
                 except (MemoryReadError, OSError) as error:
                     if pid in location.game_pids():  # gone: "The game closed; starting it again" below says it
                         self._log("error", f"Lost the game: {error}")
+                except GameRestart as reason:
+                    # Planned (memory growth, see GAME_RESTART_AFTER_H): in orbit, out of combat. Not counted as a
+                    # crash restart.
+                    self._log("info", f"Restarting the game ({reason})")
+                    window.end_process(pid)
+                    if not self._wait_game_gone(60):
+                        self._log("error", "The game did not close for the planned restart; not starting a second one")
+                        return
+                    if self.blueprints is not None:
+                        self.blueprints.stop()
+                        self.blueprints = None
+                    continue
+                except GameCrashed as error:
+                    # The process stays open behind the box with its memory frozen; earlier the bot read the frozen
+                    # ship, saw no progress and paused (2026-11-20 21:22). The process is ended (_close_crashed).
+                    self._log("error", f"The game crashed ({error}); ending it")
+                    self._snapshot("crash")
+                    self._close_crashed(pid)
+                    if not getattr(self, "user_paused", False):
+                        self.paused = False  # a pause from the frozen game ("no progress") ends with it
                 if not (self.config.start_game and self.config.restart_after_crash) or self._stop.is_set():
                     return
                 # The client crashes by itself after hours (2026-11-14 18:19, Direct3D 9): start it again.
@@ -368,6 +394,13 @@ class Bot(
 
     def _run_game(self, pid):
         self.pid = pid
+        try:
+            age = window.process_age_s(pid)
+        except Exception:
+            age = None
+        # A game taken over (bot-only restart) keeps its own uptime.
+        self.game_since = time.monotonic() - (age if age is not None and 0 <= age < 7 * 86400 else 0.0)
+        self.game_restart_noted = False
         with Process(self.pid) as process:
             self.jvm = JVM(process)
             self.reader = GameReader(self.jvm)
@@ -375,7 +408,8 @@ class Bot(
             self.desktops = VirtualDesktops()
             self.orbs = OrbMemory()
             # Its own read-only handle: the bot's reads must never share state with the background thread.
-            self.blueprints = BlueprintBook(Process(self.pid), log=self._debug, owns_process=True)
+            self.blueprints = BlueprintBook(Process(self.pid), log=self._debug, owns_process=True,
+                                            pilot_row=self.config.pilot_row)
             # A new book for each game run, so it must be started again: after the game crash of 2026-11-19 04:21 the
             # flag was still set from the first run, the new book never started, the catalogue never came and BP
             # Completion waited in the hangar until the watchdog paused the bot (04:31).
@@ -389,17 +423,40 @@ class Bot(
             finally:
                 self.input.release()  # the game is told it is not active again
 
+    @staticmethod
+    def _logged_in(pid):
+        """The game shows the ship in the world (not the login screen or the pilot list)."""
+        try:
+            process = Process(pid)
+        except Exception:
+            return False
+        try:
+            world = GameReader(JVM(process)).read()
+        except Exception:
+            world = None
+        finally:
+            try:
+                process.close()
+            except Exception:
+                pass
+        return world is not None and world.zone in ("planet", "orbit", "hangar", "starmap") and             bool(world.hitpoints or world.dead)
+
     def _game_or_start(self):
         """The running game's process id; else the game is started and logged in (setting), else None."""
         pids = location.game_pids()
+        running = None
         if len(pids) == 1:
-            return pids[0]
-        if len(pids) > 1:
-            client = GameStarter._game_pid()
-            if client is not None:
-                return client
-            self._log("error", "Several game processes and none with a game window; bot not started")
-            return None
+            running = pids[0]
+        elif len(pids) > 1:
+            running = GameStarter._game_pid()
+            if running is None:
+                self._log("error", "Several game processes and none with a game window; bot not started")
+                return None
+        if running is not None:
+            # A game left at the login screen or the pilot list (server mode keeps the game when only the bot
+            # restarts) goes through GameStarter, which logs in from there; a logged-in one is taken over as it is.
+            if not self.config.start_game or self._logged_in(running):
+                return running
         if location.problem():
             self._log("error", f"Game not running, and {location.problem()[0].lower()}{location.problem()[1:]}")
             return None
@@ -430,6 +487,21 @@ class Bot(
                     process.close()
                 except Exception:
                     pass
+
+    def _close_crashed(self, pid):
+        """End a crashed game that is held open by its crash box. The process is ended directly: closing the box lets
+        the abort go on, and under Wine that starts the crash debugger (winedbg --auto), which keeps the dead process
+        and its open files; the launcher then cannot clean up the game folder and refuses to start ("could not start
+        because the game files are being accessed", 2026-11-20 21:30). A debugger left over is ended too."""
+        ended = window.end_process(pid)
+        end = time.monotonic() + CRASH_EXIT_WAIT_S
+        while time.monotonic() < end and pid in location.game_pids():
+            time.sleep(1.0)
+        debuggers = find_pids("winedbg.exe")
+        for debugger in debuggers:
+            window.end_process(debugger)
+        self._log("warning", f"Ended the crashed game ({'done' if ended else 'could not end it'})" +
+                  (f" and {len(debuggers)} crash debugger(s)" if debuggers else ""))
 
     def _wait_game_gone(self, timeout):
         end = time.monotonic() + timeout
@@ -563,7 +635,7 @@ class Bot(
         self.route_time = 0.0
         self.move_history = []
         self.stuck_spots = []
-        self.progress = None  # [goal, best distance, time of best]
+        self.progress = None  # [goal, best distance, time of best, measured along the route]
         self.patrol_index = 0
         self.patrol = None
         self.patrol_key = None
@@ -589,6 +661,8 @@ class Bot(
         self.enemy_blocked = False  # the last move call found only ways through enemies (they are cleared first)
         self.progress_touch = 0.0
         self.last_blocked_note = 0.0
+        self.last_hop_note = 0.0
+        self.lost_drop_note = 0.0
         self.unstick = None  # ((x, y), until): short hop away from a wall
         self.last_turn = 0.0
         self.last_camera_check = 0.0
@@ -618,8 +692,38 @@ class Bot(
         self.progress_mark = None
         self.progress_time = time.monotonic()
 
+    def _game_restart_due(self, latest=False):
+        """Game uptime past GAME_RESTART_AFTER_H (restart at the next orbit), or with latest past
+        GAME_RESTART_LATEST_H (go to orbit for it). Only when the bot may start the game itself."""
+        if self.game_since is None or not (self.config.start_game and self.config.restart_after_crash):
+            return False
+        hours = (time.monotonic() - self.game_since) / 3600
+        due = hours >= (GAME_RESTART_LATEST_H if latest else GAME_RESTART_AFTER_H)
+        if due and not self.game_restart_noted:
+            self.game_restart_noted = True
+            self._log("info", f"The game has run {hours:.1f} h; restarting it at the next stay in orbit (by "
+                              f"{GAME_RESTART_LATEST_H:g} h it goes to orbit for that)")
+        return due
+
+    def _check_crash(self):
+        """Raise GameCrashed when the game shows its crash message box (checked every CRASH_CHECK_S, paused too)."""
+        now = time.monotonic()
+        if now - self.crash_checked < CRASH_CHECK_S:
+            return
+        self.crash_checked = now
+        try:
+            dialog = window.crash_dialog(self.pid)
+        except Exception as error:
+            self._debug(f"crash box check failed: {error}")
+            return
+        if dialog is not None:
+            text = " ".join(c.title for c in dialog.children if c.title)  # split() below folds line breaks
+            raise GameCrashed(f"{dialog.title}: {' '.join(text.split())[:160]}")
+
     def _loop(self):
+        self.crash_checked = 0.0
         while not self._stop.is_set():
+            self._check_crash()
             if self.paused:
                 self.status = "Paused"
                 self._stop.wait(0.3)
@@ -638,6 +742,8 @@ class Bot(
                 if not self._stop.is_set() and str(reason) != "paused by user":
                     self._log("error", f"Paused: {reason}")
                     self.paused = True
+            except GameRestart:
+                raise  # ends the run: _run restarts the game
             except GameWindowGone:
                 self.status = "Waiting for the game window"
             except SnapshotFailed:
@@ -695,7 +801,22 @@ class Bot(
             self.blueprints.start([i.template_id for i in world.items])
             self.blueprints_started = True
 
+    def _note_rank(self, world):
+        """Keep the pilot's saved rank current while it plays (gamestart._check_pilot compares the next login with
+        it): a pilot that levels up many ranks in one run is not taken for another pilot (user, 2026-11-20)."""
+        rank = world.rank_raw
+        if rank is None or rank == self.noted_rank:
+            return
+        row = str(self.config.pilot_row or 1)
+        ranks = _load_state().get("pilot_rank")
+        ranks = ranks if isinstance(ranks, dict) else ({"1": ranks} if isinstance(ranks, int) else {})
+        if ranks.get(row) is not None and rank > ranks[row]:  # only up: a known pilot levelling, never a guess
+            ranks[row] = rank
+            _save_state({"pilot_rank": ranks})
+        self.noted_rank = rank
+
     def _step(self, world):
+        self._note_rank(world)
         self._apply_hotkeys(world)
         self._send_chats(world)
         if not world.travelling:
@@ -729,6 +850,9 @@ class Bot(
             self.status = "Stopped in orbit"
             self._log("info", "In orbit; stopped (Stop in orbit)")
             self.stop()
+        elif self._game_restart_due() and world.zone in ("orbit", "starmap") and world.in_battle is not True:
+            hours = (time.monotonic() - self.game_since) / 3600
+            raise GameRestart(f"game up {int(hours)} h {int(hours * 60) % 60:02d} min; in orbit")
         elif world.zone == "hangar":
             if world.current_planet and world.current_planet.lower() not in self._hangar_orbits()["yes"]:
                 self._learn_hangar(world.current_planet, True)
@@ -789,6 +913,8 @@ class Bot(
             # 40 s doing nothing, also while being shot.
             if self.stop_in_orbit:
                 self.leaving = "Going to orbit to stop"
+            elif self._game_restart_due(latest=True):
+                self.leaving = "Going to orbit to restart the game"
             elif self.reland:
                 self.leaving = "Going to orbit to land again (no energy close by)"
             elif self.config.mode == "fly":
@@ -826,7 +952,11 @@ class Bot(
         self.chat_queue.pop(0)
         entry["state"] = "typing"
         try:
-            ChatSender(self.input, self._debug).send(entry["channel"], entry["text"], entry.get("row"))
+            from ..game import chat
+            watcher = getattr(self, "chat_watcher", None)  # set by the GUI: it finds the live chat object
+            address = getattr(watcher, "chat_address", None)
+            ChatSender(self.input, lambda: chat.bar_state(self.jvm, address), self._debug).send(entry["channel"],
+                                                                                                   entry["text"])
             entry.update(state="typed", typed_at=time.time())
         except Exception as error:
             entry.update(state="failed", detail=str(error)[:200])

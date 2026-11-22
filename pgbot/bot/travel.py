@@ -178,6 +178,13 @@ class TravelMixin:
     def _from_orbit(self, world):
         if self.config.mode == "fly" and self.destination is None:
             self._setup_fly()  # started off a planet with Fly to Planet set
+        if self.bp_hangar_wanted and not self.bp_hangar_target and self.destination is None:
+            # A mode change clears the destination, and "home" is then the old farm planet, maybe in another system:
+            # set to Antares at Lyris (Vega), the bot flew through the Vega gate to Commerce Central (Gemini) for a
+            # hangar, found none, then Iga (2026-11-19, user: "makes no sense"). The hangar comes first: this orbit's
+            # (F7), else the nearest one of this system (_enter_hangar picks it when there is none here).
+            self._enter_hangar(world)
+            return
         if self._other_system(world):
             # The destination is in another star system: through this system's gate (user, 2026-11-12).
             here = self._system_of(self._location(world))

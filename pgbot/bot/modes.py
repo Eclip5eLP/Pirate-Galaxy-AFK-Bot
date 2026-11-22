@@ -94,7 +94,8 @@ class ModesMixin:
             if not names:
                 self.active_mode = None
                 raise StopBot("Seek Enemy: enter the enemy names first")
-            self.seek = {"names": names, "levels": None, "exact": True}
+            self.seek = {"names": names, "levels": None, "exact": True,
+                         "spawners": myzen.spawners(names, {myzen.normalize(n) for n in assets.enemy_names()})}
             label += f": {', '.join(names)}"
         elif cfg.mode == "fly":
             self._setup_fly()
@@ -167,7 +168,8 @@ class ModesMixin:
         levels = (min(lows), max(highs)) if lows else None
         known = {myzen.normalize(n) for n in assets.enemy_names()}
         # Exact names where the game knows them; word matching for site names the game spells differently.
-        self.seek = {"names": names, "levels": levels, "exact": all(myzen.normalize(n) in known for n in names)}
+        self.seek = {"names": names, "levels": levels, "exact": all(myzen.normalize(n) in known for n in names),
+                     "spawners": myzen.spawners(names, known)}
         where = ", ".join(chosen[0]["planets"]) or "unknown planet"
         level_text = (f"R{levels[0]}" + (f"-{levels[1]}" if levels[1] != levels[0] else "") + " ") if levels else ""
         self._log("info", f"{cfg.seek_blueprint} drops from {level_text}{' / '.join(names)} on {where}")

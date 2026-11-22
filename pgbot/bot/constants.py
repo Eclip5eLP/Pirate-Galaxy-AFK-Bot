@@ -80,10 +80,14 @@ GATE_AT_STARBASE = {"Gemini"}  # systems whose starbase is the gate (user demo);
 MINIMAP = ("centre", 239, "bottom", -122)
 MINIMAP_SIZE = 113
 
-# Screen areas never clicked when aiming at the 3D world: HUD bottom, top bar, open map panel on the right.
-SAFE_MARGIN_BOTTOM = 270
+# Screen areas never clicked when aiming at the 3D world, measured on the bot's 1280x720 screenshots (2026-11-21):
+# bottom bar from about y 590, top bar to y 35, chat log in the bottom left (x < 310, y 420-590). The old margins
+# (bottom 270, a 520x460 "map panel" top right that the bot never opens) left only x 40-760, y 70-450 at 720p:
+# every click 1,100-2,200 ahead to the right or below counted as off screen, the ship got 550-unit clicks and crawled
+# through the Mars spiral.
+SAFE_MARGIN_BOTTOM = 140
 SAFE_MARGIN_TOP = 70
-RIGHT_PANEL = (520, 460)  # width, height of the top-right panel area
+CHAT_AREA = (330, 320)  # width, height of the chat log above the bottom-left corner
 
 
 STATE_FILE = SETTINGS_FILE.parent / "state.json"  # what the bot remembers between runs (last planet farmed)
@@ -223,6 +227,7 @@ SKILL_FAILS = 3  # presses in a row that did not take ...
 SKILL_PAUSE_S = 8  # ... pause that skill this long (60 s took the Orbital Strike out of whole fights; user: far too
 # long, the failures are short-lived: target out of range or the press lost to another key)
 SEEK_AGGRESSIVE_RANGE = 8000  # seek modes also fight aggressive enemies this close
+FOCUS_FIGHT_RADIUS = 12000  # sought enemies further than this from every focused patrol area are only fought when they attack
 BLOCKER_MEMORY_S = 3  # enemies blocking every way stay "in the way" this long
 REPAIR_CAST_S = 2.5  # after a repair press no other key until the repair shows as used, at most this long
 REPAIR_TRIES = 2  # repair presses within REPAIR_TRY_WINDOW_S that did not take: treat repair as unavailable
@@ -279,7 +284,7 @@ OUTNUMBERED_RETREAT_HULL = 0.7  # with 3+ attackers and repair not ready, retrea
 # Farming modes by level gap (ship level - median enemy level), user 2026-11-12: below 0 "lower" (enemies one by
 # one or death is likely), 0-9 "same" (still careful, smart fights, dangers avoided), 10+ "high" (outlevels them).
 LOWER_GAP = 0  # gap below this: lower level
-HIGH_GAP = 10  # gap this or more: high level
+HIGH_GAP = 7  # gap this or more: high level (10 -> 8 user 2026-11-19: a Gemini ship L33 is far above Lustra L25; 7 user 2026-11-20)
 MODE_NAMES = {"lower": "Lower level farming", "same": "Same level farming", "high": "High level farming"}
 LOWER_SKIP_NAMES = ("harvester",)  # never started in lower level mode (8+ Interceptor waves); fought if attacking
 # Afterburner gain (user, 2026-11-16): its boost depends on the ship's hull, so the upgraded armor (919,813 hull) made the
@@ -303,6 +308,13 @@ FAR_ATTACKER_WAIT_S = 20.0  # an attacker out of reach behind other enemies is w
 FAR_ATTACKER_IGNORE_S = 60.0
 FAR_ATTACKER_APPROACH_S = 5.0  # ... or only this long if it is not coming any closer  # ... then left alone this long unless it comes within range
 MAX_RESTARTS_PER_HOUR = 3  # game restarts after crashes
+# Planned game restart (user, 2026-11-20): the client's memory grows ~160 MB/h and it crashes at ~1.45 GB after 5-7 h
+# (memtrack.log; crashes 2026-11-19 04:21, 2026-11-20 05:19 and 21:18). From GAME_RESTART_AFTER_H of game uptime the
+# game is restarted at the next stay in orbit; from GAME_RESTART_LATEST_H the ship goes to orbit for it.
+GAME_RESTART_AFTER_H = 4.0
+GAME_RESTART_LATEST_H = 4.5
+CRASH_CHECK_S = 5.0  # how often the bot looks for the game's crash message box (window.crash_dialog)
+CRASH_EXIT_WAIT_S = 15.0  # after ending the crashed game, how long its process may take to go
 # Taking off to another planet (_leave_planet): the game allows it only a few seconds after the last fight (user).
 LEAVE_CALM_S = 6.0          # nothing fought the ship for this long before F5
 LEAVE_CLEAR_MARGIN = 1500.0 # take off no closer than this to an enemy's aggro range
@@ -356,3 +368,9 @@ HYPERJUMP_SETTLE_S = 4  # the travel panel fades in after the trip starts
 WATCHDOG_S = 30  # bot loop without a finished tick this long: thread stacks to the log
 STUCK_ACTIVE_S = 20  # a skill flagged active this long (and longer than its effect) has a stuck flag
 BP_REUSE_S = 45 * 60  # blueprint progress saved this recently is used after a restart (no hangar trip)
+IGNORE_LIST_MODES = ("patrol", "park", "wander")  # the ignore list holds fully only in these modes
+LEARNED_AREAS_MAX = 12  # patrol points from learned places of the sought enemies (no site spawn areas)
+SEEK_TARGET_MAX = 12000  # seek modes: sought enemies further than this are left to the patrol
+MAX_SAVED_PARTS = 1000  # saved blueprint part counts above this are no counts (999 = complete, parts not known)
+AREA_LEVEL_RADIUS = 16000  # seek patrol: learned sightings this close to a site spawn area belong to it
+AREA_OTHER_LEVEL_MIN = 10  # ...this many of the sought type at other levels, none at the sought ones: area left out

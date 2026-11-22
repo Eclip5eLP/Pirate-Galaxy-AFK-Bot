@@ -116,10 +116,18 @@ class MovementMixin:
                 x, y = point
         goal = (round(x, -2), round(y, -2))
         distance_left = math.hypot(x - world.x, y - world.y)
-        if self.progress is None or self.progress[0] != goal:
-            self.progress = [goal, distance_left, now]
+        # Progress along the route, not in a straight line: in the Mars spiral every route first leads away from
+        # the goal (straight 14k, route 93k), so each patrol point was given up after 15 s and the bot flew back and
+        # forth between them for an hour (2026-11-21 16:50-17:40).
+        by_route = (self.route is not None and len(self.route) > 1
+                    and math.hypot(self.route_goal[0] - x, self.route_goal[1] - y) <= 800)
+        if by_route:
+            distance_left = math.hypot(self.route[1][0] - world.x, self.route[1][1] - world.y) + sum(
+                math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(self.route[1:], self.route[2:]))
+        if self.progress is None or self.progress[0] != goal or self.progress[3] != by_route:
+            self.progress = [goal, distance_left, now, by_route]
         elif distance_left < self.progress[1] - 300:
-            self.progress[1:] = [distance_left, now]
+            self.progress[1:3] = [distance_left, now]
         elif now - self.progress[2] > GIVE_UP_S:
             self._debug(f"no progress toward {label} ({x:.0f}, {y:.0f}) for {GIVE_UP_S} s; giving it up")
             self.progress = None
@@ -314,20 +322,32 @@ class MovementMixin:
         candidates = [(path, min(distance, h)) for h in hops]
         if len(path) > 2:
             candidates += [(straight, min(straight_length, h)) for h in hops]
+        rejected = []  # why longer hops were not clicked (logged when a short hop is used)
         for line, hop in candidates:
             tx, ty = _point_along(line, hop)
             # Cutting a corner must not cross terrain (the route keeps its wall margin; the straight click may not).
             if nav is not None and line is path and len(path) > 2 and not nav.line_clear(start, (tx, ty)):
+                rejected.append(f"{hop:.0f} corner")
                 continue
             ground = self._click_height(nav, tx, ty, world)
             height = ground
             pixel = self._project_on(camera, tx, ty, height)
+            if pixel is None:
+                raw = camera.project(tx, ty, height if height is not None else camera.target[1],
+                                     self.input.game.width, self.input.game.height)
+                rejected.append(f"{hop:.0f} off screen {tuple(round(v) for v in raw) if raw else None}")
             # A click with terrain between camera and ground point lands on that terrain instead.
-            if pixel is not None and nav is not None and height is not None \
-                    and not nav.sight_clear(camera.eye, (tx, height, ty)):
+            elif nav is not None and height is not None and not nav.sight_clear(camera.eye, (tx, height, ty)):
                 pixel = None
+                rejected.append(f"{hop:.0f} hidden")
             if pixel is not None:
                 break
+        if pixel is not None and rejected and distance > first_hop and now - self.last_hop_note > 10:
+            # Short clicks make the ship stop at each one (crawl in the Mars spiral, 2026-11-21).
+            self.last_hop_note = now
+            self._debug(f"short click hop: {'; '.join(rejected)}; camera pitch {self._camera_pitch(camera):.0f} deg "
+                        f"distance {math.dist(camera.eye, camera.target):.0f}, screen "
+                        f"{self.input.game.width}x{self.input.game.height}")
         if pixel is None:
             # No clickable point for a while with the camera already facing the way: the ship stood still for
             # 3 min at (878, -17527) "moving into range" of a patrolling Mantis Signor (2026-11-12 14:55); its

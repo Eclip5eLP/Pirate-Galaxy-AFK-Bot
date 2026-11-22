@@ -20,7 +20,7 @@ PREFER_PX = 4               # cells within about 600 of a wall are open but cost
 NEAR_WALL_COST = 1.5        # extra cost per near-wall cell
 
 
-ROCK_PAD_PX = 3  # planets without terrain: rock outlines grown by this many collision pixels (150 units each)
+ROCK_PAD = 150.0  # planets without terrain: rock outlines grown by this many units, one map pixel (was 450, 225; user)
 ROCK_HEIGHT = 3000.0  # planets without terrain: a blocked spot on the collision map counts as a rock this tall
 
 
@@ -58,11 +58,14 @@ class NavMap:
         factor = self.size // GRID
         # Planets without terrain (asteroid fields): the collision map is the rocks' outline at the flight level, a
         # hard edge whose 3D rock reaches past it. Routes there ran along the outline and the ship scraped and stuck on
-        # the rock faces (Technatoria 2026-11-19). The outline is grown by ROCK_PAD_PX for planning there.
+        # the rock faces (Technatoria 2026-11-19). The outline is grown by ROCK_PAD for planning there.
         self.terrain = assets.find_asset(f"{prefix}.0.0.jp2") is not None
         if not self.terrain:
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ROCK_PAD_PX * 2 + 1, ROCK_PAD_PX * 2 + 1))
-            self.blocked_fine = cv2.dilate(self.blocked_fine.astype(np.uint8), kernel) > 0
+            # By distance, so the pad need not be whole pixels (150 units each): 450 units made the ship turn away
+            # from open space ("stuck on air", user 2026-11-19); 225, then 150 = one pixel (user).
+            free = (~self.blocked_fine).astype(np.uint8)
+            distance = cv2.distanceTransform(free, cv2.DIST_L2, 3) * (assets.MAP_SPAN / self.size)
+            self.blocked_fine = self.blocked_fine | (distance <= ROCK_PAD)
 
         def padded(px):
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (px * 2 + 1, px * 2 + 1))
@@ -137,7 +140,10 @@ class NavMap:
             if length * (1 - t) < skip_end:
                 break
             x, h, z = ex + (px - ex) * t, ey + (py - ey) * t, ez + (pz - ez) * t
-            if self.ground_height(x, z) > h - margin:
+            # The margin shrinks toward the point: a ground click's ray nears the ground there anyway, and with the
+            # full margin flat ground "hid" every point 2,200 ahead at a flat camera (12 deg), so clicks fell back to
+            # 550-unit hops and the ship crawled through the Mars spiral (2026-11-21 17:35).
+            if self.ground_height(x, z) > h - margin * (1 - t):
                 return False
         return True
 

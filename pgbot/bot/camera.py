@@ -96,8 +96,8 @@ class CameraMixin:
         game = self.input.game
         if not (40 < x < game.width - 40 and SAFE_MARGIN_TOP < y < game.height - SAFE_MARGIN_BOTTOM):
             return False
-        panel_w, panel_h = RIGHT_PANEL
-        return not (x > game.width - panel_w and y < panel_h)
+        chat_w, chat_h = CHAT_AREA
+        return not (x < chat_w and y > game.height - chat_h)
 
     def _project(self, x, y, height):
         camera = self._camera()

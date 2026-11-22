@@ -128,5 +128,18 @@ class Properties:
         value = unbox(self._jvm, self.raw(key))
         return default if value is None else value
 
+    def get_int(self, key):
+        """The value only if it is a boxed whole number, else None. get() hands back an object's address for other
+        classes: a torn read of a container that was being replaced gave addresses (82,133,840) as part counts, and
+        677 blueprints counted as complete (2026-11-20)."""
+        oop = self.raw(key)
+        if not oop:
+            return None
+        if self._jvm.class_name(oop) not in ("java/lang/Integer", "java/lang/Short", "java/lang/Byte",
+                                             "java/lang/Long"):
+            return None
+        value = self._jvm.get(oop, "value")
+        return value if isinstance(value, int) else None
+
     def __len__(self):
         return len(self._values)

@@ -835,6 +835,18 @@ class Learner:
             costs[(cx, cy)] = ROUTE_CELL_COST * share
         return costs
 
+    def places_of(self, planet_map, wanted, min_count=2):
+        """[(x, y, sightings)] of the map cells where wanted enemy types ("Mantis Paralyzor|33") were seen, busiest
+        first. Cells with fewer than min_count sightings are left out."""
+        places = self.store.shared["places"].get(planet_map) or {}
+        out = []
+        for cell, types in places.items():
+            count = sum(n for etype, n in types.items() if wanted(etype))
+            if count >= min_count:
+                cx, cy = (int(v) for v in cell.split(","))
+                out.append((cx * PLACE_CELL, cy * PLACE_CELL, count))
+        return sorted(out, key=lambda p: -p[2])
+
     def place_bonus(self, planet_map, x, y, wanted):
         """0..1: how often wanted enemies are seen around this point (busy areas)."""
         places = self.store.shared["places"].get(planet_map)

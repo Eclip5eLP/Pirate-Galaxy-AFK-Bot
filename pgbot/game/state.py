@@ -76,7 +76,7 @@ class Item:
     is_active: bool
     energy_cost: int | None
     last_use: int
-    hotkey: str = ""
+    hotkey: str = ""  # "" = not on the action bar: never pressed
     on_enemy: bool = False
     on_self: bool = False
     on_item: bool = False
@@ -161,6 +161,7 @@ class World:
     strikes: list = field(default_factory=list)
     own_strikes: list = field(default_factory=list)  # the player's own Orbital Strike markers (mesh without "_red")
     items: list = field(default_factory=list)
+    slots_known: bool = False  # hotkeys come from the ship's slot list in memory (else the old rule + learned keys)
     drones: list = field(default_factory=list)
     skybox: str | None = None  # the zone's skybox name, e.g. "draconis" (names the star system in orbits)
     orbit_place: str | None = None  # name from the orbit's message, e.g. "antaresgate" (orbits only)  # Drone per equipped slot, by index
@@ -336,6 +337,16 @@ class GameReader:
         # the four slots every ship has (blaster, collector, repair, afterburner); a class adds a block of four types
         # (sniper 50-53: sniper blaster, attack droid, orbital strike, attack buff), slots 5-8 in that order. Ships that
         # mix classes (Item Slot Kits, the Raven) keep the order of their items.
+        # The action bar is the ship's slot list (ship properties "slots.<item type>", empty slots included), in type
+        # order: keys 1-8 (read live 2026-11-19: GC-1 Fusion Storm slots 1,2,3,4,5,10,12,13 = blaster, collector,
+        # rocket, repair, afterburner, aim, perforator, thermoblast = keys 1-8; the hybrid 1,2,3,4,5,10,22,23).
+        slots = [t for t in range(ITEM_ID_LIMIT) if f"slots.{t}" in ship_props]
+        if slots:
+            for item in items:
+                item.hotkey = str(slots.index(item.slot) + 1) if item.slot in slots[:8] else ""
+            self.slots_known = True
+            return items
+        self.slots_known = False
         common = {1: 1, 2: 2, 4: 3, 5: 4}
         blocks = {item.slot // 10 for item in items if item.slot not in common}
         by_rule = len(blocks) == 1 and all(item.slot in common or item.slot >= 10 for item in items)
@@ -418,6 +429,7 @@ class GameReader:
             if heading:
                 world.heading = (jvm.get(heading, "bx"), jvm.get(heading, "by"))
             world.items = self._items(ship_props)
+            world.slots_known = getattr(self, "slots_known", False)
 
         markers = {}
         minimap = components.get("com/splitscreen/ans")
